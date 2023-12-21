@@ -1,0 +1,33 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Simulate",
+      "type": "python",
+      "program": "${workspaceFolder}/scenes/ExecuteUpdate.py",
+      "request": "launch",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "variablePresentation": {
+        "function": "hide",
+        "special": "hide"
+      }
+    },
+    {
+      "name": "Render",
+      "type": "python",
+      "module": "manim",
+      "args": ["-qh", "manim_renderer/scene.py", "TemporalScene"],
+      "env": {
+        "TEMPORAL_ANIMATIONS_EVENTS_FILE": "scenes/events/CallActivity.jsonl"
+      },
+      "request": "launch",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "variablePresentation": {
+        "function": "hide",
+        "special": "hide"
+      }
+    }
+  ]
+}

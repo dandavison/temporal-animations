@@ -1,0 +1,1 @@
+manim -qh manim_renderer/scene.py TemporalScene
