@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "tempyral"
+version = "0.1.0"
+description = ""
+authors = ["Dan Davison <dan.davison@temporal.io>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10,<3.13"
+manim = "^0.18.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
