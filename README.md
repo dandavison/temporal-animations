@@ -1,22 +1,22 @@
 A toolkit for creating animations explaining Temporal.
 
-- [`schema/`](schema/) defines a schema describing actor state changes and messages passing between actors.
+- [`schema`](schema/) defines a schema describing actor state changes and messages passing between actors.
 
-- [`manim_renderer/`](manim_renderer/) uses [manim](https://github.com/ManimCommunity/manim) to render JSONL data conforming to the schema as an animation.
+- [`manim_renderer`](manim_renderer/) uses [manim](https://github.com/ManimCommunity/manim) to render JSONL data conforming to the schema as an animation.
 
-- [`tempyral/`](tempyral/) is a simulation of Temporal that outputs the JSONL format.
+- [`tempyral`](tempyral/) is a simulation of Temporal that outputs the JSONL format.
 
-### Example output
+### Output
 
-https://go.temporal.io/temporal-animations/
+https://go.temporal.io/temporal-animations
 
-### Example usage
+### Usage
 
 ```
 python scenes/CallActivity.py | manim render --quality h manim_renderer/scene.py TemporalScene
 ```
 
-To create a new animation illustrating a different aspect of Temporal, take a look at the commits implementing [`SignalWithStart`](https://github.com/temporalio/temporal-animations/commit/5d1b852383c7f1a2a30b25b2a5e607c9cdddeaeb) and [`StartWorkflowAndExecuteUpdate`](https://github.com/temporalio/temporal-animations/commit/b064eeba637aeb577c2850a64b5704aa9d3fd452).
+To create a new animation illustrating a different aspect of Temporal, take a look at the commits implementing [`SignalWithStart`](https://github.com/temporalio/temporal-animations/commit/34f932bf30ff01f123643f569c96127617f5e5a5) and [`StartWorkflowAndExecuteUpdate`](https://github.com/temporalio/temporal-animations/commit/ac4cb605a12cd6acdc7640685262acb7c856a4ca).
 
 ### Installation
 
@@ -34,4 +34,4 @@ poetry install
 poetry shell
 ```
 
-To use the command-line utilities in [`bin/`](bin/), install [fzf](https://github.com/junegunn/fzf).
+To use the command-line utilities in [`bin`](bin/), install [fzf](https://github.com/junegunn/fzf).
