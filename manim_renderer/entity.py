@@ -3,7 +3,7 @@ Manim representations of Temporal entities.
 """
 from abc import ABC, abstractmethod, abstractstaticmethod
 from enum import Enum
-from typing import Generic, Iterable, Self, Type, TypeVar
+from typing import Generic, Iterable, Self, Type, TypeVar, cast
 
 import numpy as np
 from manim import (
@@ -29,6 +29,8 @@ from schema import schema
 E = TypeVar("E", bound=schema.Entity)
 
 from manim_renderer.manim_shims import AnimationGroup, ApplyMethod, Transform
+
+SHOW_LAMPORT_TIMESTAMPS = False
 
 
 class MessageStage(Enum):
@@ -214,14 +216,17 @@ class ProxyEntity(Generic[E], VisualElement):
         self.scene.wait()
 
     def with_time(self, mobj: Mobject, entity: E) -> VMobject:
-        return VGroup(
-            mobj,
-            Text(
-                f"[{entity.time}]",
-                font_size=8,
-                font=style.FONT_CODE,
-            ),
-        ).arrange(RIGHT, buff=0.05, aligned_edge=DOWN)
+        if SHOW_LAMPORT_TIMESTAMPS:
+            return VGroup(
+                mobj,
+                Text(
+                    f"[{entity.time}]",
+                    font_size=8,
+                    font=style.FONT_CODE,
+                ),
+            ).arrange(RIGHT, buff=0.05, aligned_edge=DOWN)
+        else:
+            return cast(VMobject, mobj)
 
 
 F = TypeVar("F", bound=schema.Entity)
