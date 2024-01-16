@@ -60,7 +60,6 @@ class TemporalScene(Scene):
         )
         assert isinstance(self.camera, Camera)
         self.camera.background_color = COLOR_SCENE_BACKGROUND
-        self.add_timestamp()
 
         server = renderer.Server(event.server)
         [app] = [renderer.Application(a) for a in event.apps]
