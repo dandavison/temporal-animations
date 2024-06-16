@@ -8,6 +8,7 @@ from typing import Iterable, Iterator, cast
 
 from manim import (
     DR,
+    RIGHT,
     UR,
     Camera,
     Create,
@@ -19,7 +20,6 @@ from manim import (
     VGroup,
 )
 
-import manim_renderer as renderer
 from manim_renderer import style
 from manim_renderer.style import COLOR_SCENE_BACKGROUND
 from manim_renderer.workflow_task import BoxedHistoryEvents
@@ -29,30 +29,61 @@ HistoryEvent = partial(
     schema.HistoryEvent, seen_by_worker=False, data={}, id=1, time=0, _type=""
 )
 
-history = [
-    HistoryEvent(event_type=schema.HistoryEventType.WF_STARTED),
-    HistoryEvent(event_type=schema.HistoryEventType.WFT_SCHEDULED),
-    HistoryEvent(event_type=schema.HistoryEventType.WFT_STARTED),
-    HistoryEvent(event_type=schema.HistoryEventType.WFT_COMPLETED),
-    HistoryEvent(event_type=schema.HistoryEventType.ACTIVITY_TASK_SCHEDULED),
-    HistoryEvent(event_type=schema.HistoryEventType.TIMER_STARTED),
-    HistoryEvent(event_type=schema.HistoryEventType.ACTIVITY_TASK_STARTED),
-    HistoryEvent(event_type=schema.HistoryEventType.ACTIVITY_TASK_COMPLETED),
-    HistoryEvent(event_type=schema.HistoryEventType.WFT_SCHEDULED),
-    HistoryEvent(event_type=schema.HistoryEventType.WFT_STARTED),
-]
+
+class History:
+
+    def __init__(self, events: Iterable[schema.HistoryEvent]):
+        self.unapplied_events = deque(events)
+        self.applied_events = deque([])
+
+    def render_unapplied(self) -> Mobject:
+        return self._render_events(self.unapplied_events).align_on_border(DR)
+
+    def render_applied(self) -> Mobject:
+        return self._render_events(self.applied_events).align_on_border(RIGHT)
+
+    @staticmethod
+    def _render_events(events: Iterable[schema.HistoryEvent]) -> Mobject:
+        return BoxedHistoryEvents.render(events, [])
+
+
+def apply_event_to_state_machines(event: schema.HistoryEvent): ...
+
+
+history = History(
+    [
+        HistoryEvent(event_type=schema.HistoryEventType.WF_STARTED),
+        HistoryEvent(event_type=schema.HistoryEventType.WFT_SCHEDULED),
+        HistoryEvent(event_type=schema.HistoryEventType.WFT_STARTED),
+        HistoryEvent(event_type=schema.HistoryEventType.WFT_COMPLETED),
+        HistoryEvent(event_type=schema.HistoryEventType.ACTIVITY_TASK_SCHEDULED),
+        HistoryEvent(event_type=schema.HistoryEventType.TIMER_STARTED),
+        HistoryEvent(event_type=schema.HistoryEventType.ACTIVITY_TASK_STARTED),
+        HistoryEvent(event_type=schema.HistoryEventType.ACTIVITY_TASK_COMPLETED),
+        HistoryEvent(event_type=schema.HistoryEventType.WFT_SCHEDULED),
+        HistoryEvent(event_type=schema.HistoryEventType.WFT_STARTED),
+    ]
+)
 
 
 class WorkerScene(Scene):
 
     def construct(self):
         self.init()
-        unapplied_events = deque(history)
-        applied_events = deque([])
-        unapplied_eventsm = render_history_events(unapplied_events).align_on_border(DR)
-        applied_eventsm = render_history_events(applied_events).align_on_border(UR)
+        unapplied_eventsm = history.render_unapplied()
+        applied_eventsm = history.render_applied()
         self.add(unapplied_eventsm)
         self.add(applied_eventsm)
+        self.wait(2)
+        while history.unapplied_events:
+            event = history.unapplied_events.popleft()
+            apply_event_to_state_machines(event)
+            event.seen_by_worker = True
+            history.applied_events.append(event)
+            unapplied_eventsm.become(history.render_unapplied())
+            applied_eventsm.become(history.render_applied())
+            self.wait(1)
+
         self.wait(2)
 
     def init(
@@ -61,7 +92,6 @@ class WorkerScene(Scene):
         """
         Initialize the manim scene.
         """
-        renderer.set_scene(self)
         self.add(
             MarkupText(
                 f'<span underline="single">Workflow Worker</span>',
@@ -83,10 +113,6 @@ class WorkerScene(Scene):
             ]
         )
         self.play(Create(objects))
-
-
-def render_history_events(events: Iterable[schema.HistoryEvent]) -> Mobject:
-    return BoxedHistoryEvents.render(events, [])
 
 
 def grid(items: list[tuple[str, str]]) -> Mobject:
