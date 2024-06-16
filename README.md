@@ -13,7 +13,7 @@ https://go.temporal.io/temporal-animations
 ### Usage
 
 ```
-python scenes/CallActivity.py | manim render --quality h manim_renderer/scene.py TemporalScene
+python scenes/CallActivity.py | manim render --quality h manim_renderer/temporal_scene.py TemporalScene
 ```
 
 To create a new animation illustrating a different aspect of Temporal, take a look at the commits implementing [`SignalWithStart`](https://github.com/temporalio/temporal-animations/commit/34f932bf30ff01f123643f569c96127617f5e5a5) and [`StartWorkflowAndExecuteUpdate`](https://github.com/temporalio/temporal-animations/commit/ac4cb605a12cd6acdc7640685262acb7c856a4ca).
