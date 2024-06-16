@@ -1,9 +1,10 @@
+from collections import deque
 from functools import partial
 from itertools import chain
 import json
 import os
 import sys
-from typing import Iterator, cast
+from typing import Iterable, Iterator, cast
 
 from manim import (
     DR,
@@ -24,16 +25,34 @@ from manim_renderer.style import COLOR_SCENE_BACKGROUND
 from manim_renderer.workflow_task import BoxedHistoryEvents
 from schema import schema
 
+HistoryEvent = partial(
+    schema.HistoryEvent, seen_by_worker=False, data={}, id=1, time=0, _type=""
+)
+
+history = [
+    HistoryEvent(event_type=schema.HistoryEventType.WF_STARTED),
+    HistoryEvent(event_type=schema.HistoryEventType.WFT_SCHEDULED),
+    HistoryEvent(event_type=schema.HistoryEventType.WFT_STARTED),
+    HistoryEvent(event_type=schema.HistoryEventType.WFT_COMPLETED),
+    HistoryEvent(event_type=schema.HistoryEventType.ACTIVITY_TASK_SCHEDULED),
+    HistoryEvent(event_type=schema.HistoryEventType.TIMER_STARTED),
+    HistoryEvent(event_type=schema.HistoryEventType.ACTIVITY_TASK_STARTED),
+    HistoryEvent(event_type=schema.HistoryEventType.ACTIVITY_TASK_COMPLETED),
+    HistoryEvent(event_type=schema.HistoryEventType.WFT_SCHEDULED),
+    HistoryEvent(event_type=schema.HistoryEventType.WFT_STARTED),
+]
+
 
 class WorkerScene(Scene):
 
     def construct(self):
         self.init()
-        poll_response = make_poll_response()
-        wft = cast(schema.WorkflowTask, poll_response.task)
-        historym = BoxedHistoryEvents.render(wft.events, wft.requested_updates)
-        historym.align_on_border(DR)
-        self.add(historym)
+        unapplied_events = deque(history)
+        applied_events = deque([])
+        unapplied_eventsm = render_history_events(unapplied_events).align_on_border(DR)
+        applied_eventsm = render_history_events(applied_events).align_on_border(UR)
+        self.add(unapplied_eventsm)
+        self.add(applied_eventsm)
         self.wait(2)
 
     def init(
@@ -66,40 +85,8 @@ class WorkerScene(Scene):
         self.play(Create(objects))
 
 
-WorkerPollResponse = partial(
-    schema.WorkerPollRequest,
-    stage=schema.RequestResponseStage.Response,
-    token=None,
-    response_payload=None,
-    id=1,
-    time=0,
-    _type="",
-)
-
-HistoryEvent = partial(
-    schema.HistoryEvent, seen_by_worker=False, data={}, id=1, time=0, _type=""
-)
-
-
-def make_poll_response() -> schema.WorkerPollRequest:
-    history = [
-        HistoryEvent(event_type=schema.HistoryEventType.WF_STARTED),
-        HistoryEvent(event_type=schema.HistoryEventType.WFT_SCHEDULED),
-        HistoryEvent(event_type=schema.HistoryEventType.WFT_STARTED),
-        HistoryEvent(event_type=schema.HistoryEventType.WFT_COMPLETED),
-        HistoryEvent(event_type=schema.HistoryEventType.ACTIVITY_TASK_SCHEDULED),
-        HistoryEvent(event_type=schema.HistoryEventType.TIMER_STARTED),
-        HistoryEvent(event_type=schema.HistoryEventType.ACTIVITY_TASK_STARTED),
-        HistoryEvent(event_type=schema.HistoryEventType.ACTIVITY_TASK_COMPLETED),
-        HistoryEvent(event_type=schema.HistoryEventType.WFT_SCHEDULED),
-        HistoryEvent(event_type=schema.HistoryEventType.WFT_STARTED),
-    ]
-
-    return WorkerPollResponse(
-        task=schema.WorkflowTask(
-            events=history, workflow_id="wid", requested_updates=[], _type=""
-        )
-    )
+def render_history_events(events: Iterable[schema.HistoryEvent]) -> Mobject:
+    return BoxedHistoryEvents.render(events, [])
 
 
 def grid(items: list[tuple[str, str]]) -> Mobject:
