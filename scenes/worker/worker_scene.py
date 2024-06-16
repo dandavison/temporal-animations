@@ -1,14 +1,10 @@
-from collections import deque
-from functools import partial
 from itertools import chain
 import json
 import os
 import sys
-from typing import Iterable, Iterator, cast
+from typing import Iterator, cast
 
 from manim import (
-    DR,
-    RIGHT,
     UR,
     Camera,
     Create,
@@ -22,62 +18,40 @@ from manim import (
 
 from manim_renderer import style
 from manim_renderer.style import COLOR_SCENE_BACKGROUND
-from manim_renderer.workflow_task import BoxedHistoryEvents
 from schema import schema
-
-HistoryEvent = partial(
-    schema.HistoryEvent, seen_by_worker=False, data={}, id=1, time=0, _type=""
-)
-
-
-class History:
-
-    def __init__(self, events: Iterable[schema.HistoryEvent]):
-        self.unapplied_events = deque(events)
-        self.applied_events = deque([])
-
-    def render_unapplied(self) -> Mobject:
-        return self._render_events(self.unapplied_events).align_on_border(DR)
-
-    def render_applied(self) -> Mobject:
-        return self._render_events(self.applied_events).align_on_border(RIGHT)
-
-    @staticmethod
-    def _render_events(events: Iterable[schema.HistoryEvent]) -> Mobject:
-        return BoxedHistoryEvents.render(events, [])
-
-
-def apply_event_to_state_machines(event: schema.HistoryEvent): ...
-
-
-history = History(
-    [
-        HistoryEvent(event_type=schema.HistoryEventType.WF_STARTED),
-        HistoryEvent(event_type=schema.HistoryEventType.WFT_SCHEDULED),
-        HistoryEvent(event_type=schema.HistoryEventType.WFT_STARTED),
-        HistoryEvent(event_type=schema.HistoryEventType.WFT_COMPLETED),
-        HistoryEvent(event_type=schema.HistoryEventType.ACTIVITY_TASK_SCHEDULED),
-        HistoryEvent(event_type=schema.HistoryEventType.TIMER_STARTED),
-        HistoryEvent(event_type=schema.HistoryEventType.ACTIVITY_TASK_STARTED),
-        HistoryEvent(event_type=schema.HistoryEventType.ACTIVITY_TASK_COMPLETED),
-        HistoryEvent(event_type=schema.HistoryEventType.WFT_SCHEDULED),
-        HistoryEvent(event_type=schema.HistoryEventType.WFT_STARTED),
-    ]
-)
+from scenes.worker.history import history
+from scenes.worker.state_machines import WorkflowStateMachines
 
 
 class WorkerScene(Scene):
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.schedulerm: Mobject
+        self.coroutinesm: Mobject
+        self.state_machinesm: Mobject
+
     def construct(self):
+        try:
+            self._construct()
+        except:
+            import pdb
+
+            pdb.post_mortem()
+
+    def _construct(self):
         self.init()
         unapplied_eventsm = history.render_unapplied()
         applied_eventsm = history.render_applied()
         self.add(unapplied_eventsm)
         self.add(applied_eventsm)
         self.wait(2)
+        machines = WorkflowStateMachines(self.state_machinesm, self.coroutinesm, self)
+
         while history.unapplied_events:
             event = history.unapplied_events.popleft()
-            apply_event_to_state_machines(event)
+            machines.handle_event(event)
             event.seen_by_worker = True
             history.applied_events.append(event)
             unapplied_eventsm.become(history.render_unapplied())
@@ -101,23 +75,26 @@ class WorkerScene(Scene):
         )
         assert isinstance(self.camera, Camera)
         self.camera.background_color = COLOR_SCENE_BACKGROUND
+        self.play(Create(self.make_grid()))
 
-        objects = grid(
-            [
-                ("", "Scheduler"),
-                ("Coroutines", ""),
-                ("State Machines", ""),
-                ("", "Poller"),
-                *grid_blank_rows(2),
-                ("", "Server"),
-            ]
-        )
-        self.play(Create(objects))
+    def make_grid(self) -> Mobject:
+        items = [
+            ("", "Scheduler"),
+            ("Coroutines", ""),
+            ("State Machines", ""),
+            ("", "Poller"),
+            *grid_blank_rows(2),
+            ("", "Server"),
+        ]
 
+        rows = [(label_text(left), labeled_rectangle(right)) for left, right in items]
 
-def grid(items: list[tuple[str, str]]) -> Mobject:
-    rows = [(label_text(left), labeled_rectangle(right)) for left, right in items]
-    return VGroup(*chain.from_iterable(rows)).arrange_in_grid(cols=2)
+        # TODO: cleanup
+        self.schedulerm = rows[0][1]
+        self.coroutinesm = rows[1][1]
+        self.state_machinesm = rows[2][1]
+
+        return VGroup(*chain.from_iterable(rows)).arrange_in_grid(cols=2)
 
 
 def grid_blank_rows(nlines: int) -> list[tuple[str, str]]:
