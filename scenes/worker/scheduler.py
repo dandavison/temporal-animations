@@ -2,6 +2,7 @@ from collections import deque
 from dataclasses import dataclass
 
 from manim import Mobject
+from scenes.worker.coroutines import Coroutines
 from scenes.worker.state_machines import (
     Command,
     ActivityTaskStateMachine,
@@ -13,8 +14,8 @@ from schema import schema
 
 @dataclass
 class Scheduler:
+    coroutines: Coroutines
     mobj: Mobject
-    coroutines_mobj: Mobject
 
     def run_all_coroutines_until_blocked(
         self,
@@ -41,3 +42,6 @@ class Scheduler:
                 case _:
                     raise ValueError(command.command_type)
             machines.commands_generated_by_user_workflow_code.append(command)
+
+            if command.coroutine_id not in self.coroutines.ids:
+                self.coroutines.add_coroutine(command.coroutine_id)

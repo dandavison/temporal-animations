@@ -19,6 +19,7 @@ from manim import (
 
 from manim_renderer import style
 from manim_renderer.style import COLOR_SCENE_BACKGROUND
+from scenes.worker.coroutines import Coroutines
 from scenes.worker.scheduler import Scheduler
 from schema import schema
 from scenes.worker.input import history, commands
@@ -52,7 +53,8 @@ class WorkerScene(Scene):
         self.add(applied_events_mobj)
         self.wait(2)
 
-        scheduler = Scheduler(self.scheduler_mobj, self.coroutines_mobj)
+        coroutines = Coroutines(self.coroutines_mobj, scene=self)
+        scheduler = Scheduler(coroutines, self.scheduler_mobj)
         machines = WorkflowStateMachines(
             self.state_machines_mobj,
             scheduler=scheduler,
