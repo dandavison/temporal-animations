@@ -1,12 +1,18 @@
 import sys
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Hashable, OrderedDict
+from typing import Any, Hashable, Optional, OrderedDict
 
 
 @dataclass
 class Model:
     _type: str
+
+
+class CommandType(Enum):
+    SCHEDULE_ACTIVITY_TASK = 1
+    START_TIMER = 2
+    COMPLETE_WORKFLOW_EXECUTION = 3
 
 
 # https://github.com/temporalio/api/blob/master/temporal/api/enums/v1/event_type.proto#L35
@@ -28,6 +34,22 @@ class HistoryEventType(Enum):
     WF_UPDATE_ACCEPTED = 41
     WF_UPDATE_REJECTED = 42
     WF_UPDATE_COMPLETED = 43
+
+    def matching_command_type(self) -> Optional[CommandType]:
+        return _event_type_to_command_type.get(self)
+
+    def is_command_event(self) -> bool:
+        return self.matching_command_type() is not None
+
+    def matches_command_type(self, command_type: CommandType):
+        return self.matching_command_type() == command_type
+
+
+_event_type_to_command_type = {
+    HistoryEventType.ACTIVITY_TASK_SCHEDULED: CommandType.SCHEDULE_ACTIVITY_TASK,
+    HistoryEventType.TIMER_STARTED: CommandType.START_TIMER,
+    HistoryEventType.WF_COMPLETED: CommandType.COMPLETE_WORKFLOW_EXECUTION,
+}
 
 
 class ApplicationRequestType(Enum):

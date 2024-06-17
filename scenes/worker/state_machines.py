@@ -1,25 +1,54 @@
 from collections import deque
 from dataclasses import dataclass, field
+from typing import Iterator, Optional, TYPE_CHECKING
 
-from manim import RIGHT, Circle, Mobject, Scene, Triangle
+from manim import RIGHT, Mobject, Scene, Triangle
 
-from .history import HistoryEvent, HistoryEventId, HistoryEventType
+from scenes.worker.history import HistoryEvent, HistoryEventId, HistoryEventType
+from schema import schema
+
+if TYPE_CHECKING:
+    from scenes.worker.scheduler import Scheduler
 
 MACHINE_RADIUS = 0.3
 
 
 class StateMachine(Triangle):
-    def __init__(self) -> None:
+    def __init__(self, workflow_machines: "WorkflowStateMachines") -> None:
         super().__init__(radius=MACHINE_RADIUS)
+        self.workflow_machines = workflow_machines
 
     def handle(self, event: HistoryEvent): ...
 
 
+@dataclass
+class Command:
+    command_type: schema.CommandType
+    coroutine_id: int
+    machine: Optional[StateMachine] = None
+
+
 class WorkflowTaskStateMachine(StateMachine):
+    def __init__(
+        self,
+        workflow_machines: "WorkflowStateMachines",
+        commands_that_will_be_generated_in_this_wft: list[Command],
+    ):
+        super().__init__(workflow_machines)
+        self.commands_that_will_be_generated_in_this_wft = (
+            commands_that_will_be_generated_in_this_wft
+        )
+
     def handle(self, event: HistoryEvent):
         match event.event_type:
+            case HistoryEventType.WFT_SCHEDULED:
+                print("WFT_SCHEDULED")
             case HistoryEventType.WFT_STARTED:
                 print("WFT_STARTED")
+                self.workflow_machines.scheduler.run_all_coroutines_until_blocked(
+                    self.commands_that_will_be_generated_in_this_wft,
+                    self.workflow_machines,
+                )
             case HistoryEventType.WFT_COMPLETED:
                 print("WFT_COMPLETED")
             case _:
@@ -29,6 +58,8 @@ class WorkflowTaskStateMachine(StateMachine):
 class ActivityTaskStateMachine(StateMachine):
     def handle(self, event: HistoryEvent):
         match event.event_type:
+            case HistoryEventType.ACTIVITY_TASK_SCHEDULED:
+                print("AT_SCHEDULED")
             case HistoryEventType.ACTIVITY_TASK_STARTED:
                 print("AT_STARTED")
             case HistoryEventType.ACTIVITY_TASK_COMPLETED:
@@ -49,16 +80,15 @@ class TimerStateMachine(StateMachine):
 
 
 @dataclass
-class Command:
-    machine: StateMachine
-
-
-@dataclass
 class WorkflowStateMachines:
-    coroutinesm: Mobject
-    state_machinesm: Mobject
+    mobj: Mobject
+    scheduler: "Scheduler"
     scene: Scene
-    commands: deque[Command] = field(default_factory=deque)
+    # User workflow code is represented by a stream of batches of commands generated in each WFT.
+    user_workflow_code: Iterator[list[Command]]
+    commands_generated_by_user_workflow_code: deque[Command] = field(
+        default_factory=deque
+    )
     machines: dict[HistoryEventId, StateMachine] = field(default_factory=dict)
 
     # TODO
@@ -77,7 +107,10 @@ class WorkflowStateMachines:
         elif event.event_type == HistoryEventType.WFT_SCHEDULED:
             # Non-stateful event
             # Create an instance of WorkflowTaskStateMachine.
-            self.add_machine(event, WorkflowTaskStateMachine())
+            self.add_machine(
+                event,
+                WorkflowTaskStateMachine(self, next(self.user_workflow_code)),
+            )
 
         elif event.event_type == HistoryEventType.WFT_STARTED:
             # Look up WorkflowTaskStateMachine instance and handle the event.
@@ -100,7 +133,7 @@ class WorkflowStateMachines:
             # later transitioning to complete, will complete the promise.
 
             # TODO: should be created by command and set promise-completing callback
-            self.add_machine(event, TimerStateMachine())
+            self.add_machine(event, TimerStateMachine(self))
 
         elif event.event_type == HistoryEventType.TIMER_FIRED:
             # Look up TimerStateMachine instance and handle the event by calling the promise completion
@@ -117,7 +150,7 @@ class WorkflowStateMachines:
             # such that the promise is completed when the activity is completed.
 
             # TODO: should be created by command and set promise-completing callback
-            self.add_machine(event, ActivityTaskStateMachine())
+            self.add_machine(event, ActivityTaskStateMachine(self))
 
         elif event.event_type == HistoryEventType.ACTIVITY_TASK_STARTED:
             self.machines[event.initiating_event_id].handle(event)
@@ -125,10 +158,28 @@ class WorkflowStateMachines:
         elif event.event_type == HistoryEventType.ACTIVITY_TASK_COMPLETED:
             self.machines[event.initiating_event_id].handle(event)
 
+        # Command events
+        # --------------
+        if event.event_type.is_command_event():
+            # Events corresponding to a command issued by user workflow code
+            # E.g. ACTIVITY_TASK_SCHEDULED, TIMER_STARTED, WORKFLOW_EXECUTION_COMPLETED
+
+            # At some point, we executed some user code in one of the workflow coroutines and it
+            # generated the command corresponding to this event. (If we are replaying from the
+            # beginning then that just happened in this WFT; but if we are a sticky worker with this
+            # workflow execution in cache, then that happened in a previous WFT.) When that
+            # happened, we created an instance of the state machine corresponding to the event, and
+            # enqueued a Command object containing the state machine instance.
+
+            # Now, we have encountered the corresponding event in history. It should be at the front
+            # of the queue.
+            command = self.commands_generated_by_user_workflow_code.popleft()
+            assert event.event_type.matches_command_type(command.command_type)
+            assert command.machine
+            command.machine.handle(event)
+
     def add_machine(self, initiating_event: HistoryEvent, machine: StateMachine):
         self.machines[initiating_event.id] = machine
-        machine.move_to(self.state_machinesm).shift(
-            RIGHT * self.n_machines * MACHINE_RADIUS
-        )
+        machine.move_to(self.mobj).shift(RIGHT * self.n_machines * MACHINE_RADIUS)
         self.scene.add(machine)
         self.n_machines += 1

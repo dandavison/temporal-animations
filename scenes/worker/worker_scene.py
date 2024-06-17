@@ -10,6 +10,7 @@ from manim import (
     Create,
     MarkupText,
     Mobject,
+    Rectangle,
     Scene,
     SurroundingRectangle,
     Text,
@@ -18,8 +19,9 @@ from manim import (
 
 from manim_renderer import style
 from manim_renderer.style import COLOR_SCENE_BACKGROUND
+from scenes.worker.scheduler import Scheduler
 from schema import schema
-from scenes.worker.history import history
+from scenes.worker.input import history, commands
 from scenes.worker.state_machines import WorkflowStateMachines
 
 
@@ -28,34 +30,42 @@ class WorkerScene(Scene):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.schedulerm: Mobject
-        self.coroutinesm: Mobject
-        self.state_machinesm: Mobject
+        self.scheduler_mobj: Mobject
+        self.coroutines_mobj: Mobject
+        self.state_machines_mobj: Mobject
 
     def construct(self):
         try:
             self._construct()
-        except:
+        except Exception as err:
+            print(f"{err.__class__.__name__}({err})", file=sys.stderr)
             import pdb
 
             pdb.post_mortem()
+            exit(1)
 
     def _construct(self):
         self.init()
-        unapplied_eventsm = history.render_unapplied()
-        applied_eventsm = history.render_applied()
-        self.add(unapplied_eventsm)
-        self.add(applied_eventsm)
+        unapplied_events_mobj = history.render_unapplied()
+        applied_events_mobj = history.render_applied()
+        self.add(unapplied_events_mobj)
+        self.add(applied_events_mobj)
         self.wait(2)
-        machines = WorkflowStateMachines(self.state_machinesm, self.coroutinesm, self)
 
+        scheduler = Scheduler(self.scheduler_mobj, self.coroutines_mobj)
+        machines = WorkflowStateMachines(
+            self.state_machines_mobj,
+            scheduler=scheduler,
+            user_workflow_code=iter(commands),
+            scene=self,
+        )
         while history.unapplied_events:
             event = history.unapplied_events.popleft()
             machines.handle_event(event)
             event.seen_by_worker = True
             history.applied_events.append(event)
-            unapplied_eventsm.become(history.render_unapplied())
-            applied_eventsm.become(history.render_applied())
+            unapplied_events_mobj.become(history.render_unapplied())
+            applied_events_mobj.become(history.render_applied())
             self.wait(1)
 
         self.wait(2)
@@ -83,16 +93,15 @@ class WorkerScene(Scene):
             ("Coroutines", ""),
             ("State Machines", ""),
             ("", "Poller"),
-            *grid_blank_rows(2),
             ("", "Server"),
         ]
 
-        rows = [(label_text(left), labeled_rectangle(right)) for left, right in items]
+        rows = [(label_text(left), rectangle(right)) for left, right in items]
 
         # TODO: cleanup
-        self.schedulerm = rows[0][1]
-        self.coroutinesm = rows[1][1]
-        self.state_machinesm = rows[2][1]
+        self.scheduler_mobj = rows[0][1]
+        self.coroutines_mobj = rows[1][1]
+        self.state_machines_mobj = rows[2][1]
 
         return VGroup(*chain.from_iterable(rows)).arrange_in_grid(cols=2)
 
@@ -105,19 +114,22 @@ def label_text(text: str) -> Text:
     return Text(text, font_size=16)
 
 
-def labeled_rectangle(label: str) -> Mobject:
-    text = label_text(label)
-    rect = SurroundingRectangle(
-        text,
-        color=(
-            style.COLOR_HISTORY_EVENT_GROUP_RECT
-            if label
-            else style.COLOR_SCENE_BACKGROUND
-        ),
+def rectangle(label: str) -> Mobject:
+    kwargs = dict(
+        color=style.COLOR_HISTORY_EVENT_GROUP_RECT,
         stroke_width=style.STROKE_WIDTH_HISTORY_EVENT_GROUP_RECT,
         fill_color=style.COLOR_SCENE_BACKGROUND,
         fill_opacity=1,
     )
+    if label:
+        return labeled_rectangle(label, **kwargs)
+    return Rectangle(**kwargs)  # type: ignore
+
+
+def labeled_rectangle(label: str, **kwargs) -> Mobject:
+
+    text = label_text(label)
+    rect = SurroundingRectangle(text, **kwargs)
     return VGroup(rect, text)
 
 
