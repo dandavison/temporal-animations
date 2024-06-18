@@ -1,7 +1,10 @@
 from dataclasses import dataclass, field
-from types import coroutine
 
-from manim import RIGHT, Mobject, Rectangle, Scene
+from manim import RIGHT, Mobject, Rectangle
+
+from scenes.worker.constants import CONTAINER_HEIGHT, CONTAINER_WIDTH
+from scenes.worker.utils import ContainerRectangle
+from scenes.worker.lib import Entity
 
 COROUTINE_WIDTH = 0.3
 COROUTINE_HEIGHT = 0.9
@@ -15,9 +18,7 @@ class Coroutine(Rectangle):
 
 
 @dataclass
-class Coroutines:
-    mobj: Mobject
-    scene: Scene
+class Coroutines(Entity):
     ids: set[int] = field(default_factory=set)
 
     def add_coroutine(self, id: int):
@@ -28,3 +29,6 @@ class Coroutines:
         )
         self.scene.add(coroutine)
         self.ids.add(id)
+
+    def render(self) -> Mobject:
+        return ContainerRectangle(width=CONTAINER_WIDTH, height=CONTAINER_HEIGHT)

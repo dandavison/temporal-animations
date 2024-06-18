@@ -4,8 +4,10 @@ from typing import Iterator, Optional, TYPE_CHECKING
 
 from manim import RIGHT, Mobject, Scene
 
+from scenes.worker.constants import CONTAINER_HEIGHT, CONTAINER_WIDTH
 from scenes.worker.history import HistoryEvent, HistoryEventId, HistoryEventType
-from scenes.worker.utils import label_text
+from scenes.worker.lib import Entity
+from scenes.worker.utils import ContainerRectangle, label_text
 from schema import schema
 
 if TYPE_CHECKING:
@@ -85,10 +87,8 @@ class TimerStateMachine(StateMachine):
 
 
 @dataclass
-class WorkflowStateMachines:
-    mobj: Mobject
+class WorkflowStateMachines(Entity):
     scheduler: "Scheduler"
-    scene: Scene
     # User workflow code is represented by a stream of batches of commands generated in each WFT.
     user_workflow_code: Iterator[list[Command]]
     commands_generated_by_user_workflow_code: deque[Command] = field(
@@ -189,3 +189,6 @@ class WorkflowStateMachines:
         mobj.move_to(self.mobj).shift(RIGHT * self.n_machines * MACHINE_RADIUS)
         self.scene.add(mobj)
         self.n_machines += 1
+
+    def render(self):
+        return ContainerRectangle(width=CONTAINER_WIDTH, height=CONTAINER_HEIGHT)

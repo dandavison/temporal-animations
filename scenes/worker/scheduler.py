@@ -1,21 +1,21 @@
-from collections import deque
 from dataclasses import dataclass
 
 from manim import Mobject
 from scenes.worker.coroutines import Coroutines
+from scenes.worker.lib import Entity
 from scenes.worker.state_machines import (
     Command,
     ActivityTaskStateMachine,
     TimerStateMachine,
     WorkflowStateMachines,
 )
+from scenes.worker.utils import labeled_rectangle
 from schema import schema
 
 
 @dataclass
-class Scheduler:
+class Scheduler(Entity):
     coroutines: Coroutines
-    mobj: Mobject
 
     def run_all_coroutines_until_blocked(
         self,
@@ -45,3 +45,6 @@ class Scheduler:
 
             if command.coroutine_id not in self.coroutines.ids:
                 self.coroutines.add_coroutine(command.coroutine_id)
+
+    def render(self) -> Mobject:
+        return labeled_rectangle("Scheduler")
