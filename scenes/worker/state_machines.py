@@ -2,9 +2,10 @@ from collections import deque
 from dataclasses import dataclass, field
 from typing import Iterator, Optional, TYPE_CHECKING
 
-from manim import RIGHT, Mobject, Scene, Triangle
+from manim import RIGHT, Mobject, Scene
 
 from scenes.worker.history import HistoryEvent, HistoryEventId, HistoryEventType
+from scenes.worker.utils import label_text
 from schema import schema
 
 if TYPE_CHECKING:
@@ -13,9 +14,13 @@ if TYPE_CHECKING:
 MACHINE_RADIUS = 0.3
 
 
-class StateMachine(Triangle):
+class StateMachine:
+    def render(self) -> Mobject:
+        label = self.__class__.__name__.replace("StateMachine", "\nStateMachine")
+        return label_text(label, font="Monaco")
+
     def __init__(self, workflow_machines: "WorkflowStateMachines") -> None:
-        super().__init__(radius=MACHINE_RADIUS)
+        super().__init__()
         self.workflow_machines = workflow_machines
 
     def handle(self, event: HistoryEvent): ...
@@ -180,6 +185,7 @@ class WorkflowStateMachines:
 
     def add_machine(self, initiating_event: HistoryEvent, machine: StateMachine):
         self.machines[initiating_event.id] = machine
-        machine.move_to(self.mobj).shift(RIGHT * self.n_machines * MACHINE_RADIUS)
-        self.scene.add(machine)
+        mobj = machine.render()
+        mobj.move_to(self.mobj).shift(RIGHT * self.n_machines * MACHINE_RADIUS)
+        self.scene.add(mobj)
         self.n_machines += 1

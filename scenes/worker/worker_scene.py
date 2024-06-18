@@ -13,8 +13,6 @@ from manim import (
     Mobject,
     Rectangle,
     Scene,
-    SurroundingRectangle,
-    Text,
     VGroup,
     VMobject,
 )
@@ -23,6 +21,7 @@ from manim_renderer import style
 from manim_renderer.style import COLOR_SCENE_BACKGROUND
 from scenes.worker.coroutines import Coroutines
 from scenes.worker.scheduler import Scheduler
+from scenes.worker.utils import label_text, labeled_rectangle
 from schema import schema
 from scenes.worker.input import history, commands
 from scenes.worker.state_machines import WorkflowStateMachines
@@ -122,22 +121,6 @@ class ContainerRectangle(Rectangle):
             fill_opacity=1,
             **kwargs,
         )
-
-
-def labeled_rectangle(label: str, **kwargs) -> Mobject:
-    text = label_text(label)
-    rect = SurroundingRectangle(
-        text,
-        color=style.COLOR_HISTORY_EVENT_GROUP_RECT,
-        stroke_width=style.STROKE_WIDTH_HISTORY_EVENT_GROUP_RECT,
-        fill_color=style.COLOR_SCENE_BACKGROUND,
-        fill_opacity=1,
-    )
-    return VGroup(rect, text)
-
-
-def label_text(text: str) -> Text:
-    return Text(text, font_size=16)
 
 
 def read_events() -> Iterator[schema.Event]:
