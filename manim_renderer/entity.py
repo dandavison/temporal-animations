@@ -20,7 +20,7 @@ from manim import (
     VGroup,
     VMobject,
 )
-from manim.typing import Point3D, Vector3
+from manim.typing import Point3D, Vector3D
 
 from common.utils import notnull
 from manim_renderer import style
@@ -81,7 +81,7 @@ class ProxyEntity(Generic[E], VisualElement):
     def __repr__(self) -> str:
         return f"{type(self).__name__}"
 
-    def set_dock_direction(self, direction: Vector3) -> Self:
+    def set_dock_direction(self, direction: Vector3D) -> Self:
         self.dock_direction = direction
         return self
 
@@ -246,7 +246,7 @@ class ProxyEntityWithChildren(
     """
 
     child_cls: Type[Q]
-    child_align_direction: Vector3
+    child_align_direction: Vector3D
 
     def __init__(self, entity: E, parent: VisualElement = root):
         super().__init__(entity, parent=parent)
