@@ -21,20 +21,20 @@ events = [
     ),
     history_event(id=5, event_type=HistoryEventType.ACTIVITY_TASK_SCHEDULED),
     history_event(id=6, event_type=HistoryEventType.TIMER_STARTED),
-    history_event(
-        id=7,
-        event_type=HistoryEventType.ACTIVITY_TASK_STARTED,
-        initiating_event_id=5,
-    ),
-    history_event(
-        id=8,
-        event_type=HistoryEventType.ACTIVITY_TASK_COMPLETED,
-        initiating_event_id=5,
-    ),
-    history_event(id=9, event_type=HistoryEventType.WFT_SCHEDULED),
-    history_event(
-        id=10, event_type=HistoryEventType.WFT_STARTED, initiating_event_id=9
-    ),
+    # history_event(
+    #     id=7,
+    #     event_type=HistoryEventType.ACTIVITY_TASK_STARTED,
+    #     initiating_event_id=5,
+    # ),
+    # history_event(
+    #     id=8,
+    #     event_type=HistoryEventType.ACTIVITY_TASK_COMPLETED,
+    #     initiating_event_id=5,
+    # ),
+    # history_event(id=9, event_type=HistoryEventType.WFT_SCHEDULED),
+    # history_event(
+    #     id=10, event_type=HistoryEventType.WFT_STARTED, initiating_event_id=9
+    # ),
 ]
 
 
