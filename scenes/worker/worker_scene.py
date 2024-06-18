@@ -23,9 +23,9 @@ from scenes.worker.lib import Entity, EntityScene
 class WorkerScene(EntityScene):
 
     def _construct(self):
-        Entity.scene = self  # TODO: do entities really need this?
+        Entity.scene = self
         self.coroutines = Coroutines()
-        self.scheduler = Scheduler(self.coroutines)
+        self.scheduler = Scheduler(coroutines=self.coroutines)
         self.state_machines = WorkflowStateMachines(
             scheduler=self.scheduler,
             user_workflow_code=iter(commands),
@@ -50,7 +50,7 @@ class WorkerScene(EntityScene):
             unapplied_events_mobj.become(history.render_unapplied())
             applied_events_mobj.become(history.render_applied())
             self.render_to_screen()
-            self.wait(1)
+            self.wait(2)
 
         self.wait(2)
 

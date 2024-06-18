@@ -5,9 +5,10 @@ from typing import TYPE_CHECKING, Iterator, Optional
 from manim import RIGHT, Mobject, Scene, VGroup
 
 from scenes.worker.constants import CONTAINER_HEIGHT, CONTAINER_WIDTH
+from scenes.worker.explanation import Explanation
 from scenes.worker.history import HistoryEvent, HistoryEventId, HistoryEventType
 from scenes.worker.lib import Entity
-from scenes.worker.utils import ContainerRectangle, label_text, labeled_rectangle
+from scenes.worker.utils import ContainerRectangle, labeled_rectangle
 from schema import schema
 
 if TYPE_CHECKING:
@@ -16,8 +17,8 @@ if TYPE_CHECKING:
 MACHINE_RADIUS = 0.3
 
 
-@dataclass
-class StateMachine:
+@dataclass(kw_only=True)
+class StateMachine(Entity):
     workflow_machines: "WorkflowStateMachines"
 
     def render(self) -> Mobject:
@@ -40,7 +41,7 @@ class WorkflowTaskStateMachine(StateMachine):
         workflow_machines: "WorkflowStateMachines",
         commands_that_will_be_generated_in_this_wft: list[Command],
     ):
-        super().__init__(workflow_machines)
+        super().__init__(workflow_machines=workflow_machines)
         self.commands_that_will_be_generated_in_this_wft = (
             commands_that_will_be_generated_in_this_wft
         )
@@ -85,7 +86,7 @@ class TimerStateMachine(StateMachine):
                 raise ValueError(event)
 
 
-@dataclass
+@dataclass(kw_only=True)
 class WorkflowStateMachines(Entity):
     scheduler: "Scheduler"
     # User workflow code is represented by a stream of batches of commands generated in each WFT.
@@ -108,9 +109,20 @@ class WorkflowStateMachines(Entity):
         elif event.event_type == HistoryEventType.WFT_SCHEDULED:
             # Non-stateful event
             # Create an instance of WorkflowTaskStateMachine.
+            machine = WorkflowTaskStateMachine(self, next(self.user_workflow_code))
             self.add_machine(
                 event,
-                WorkflowTaskStateMachine(self, next(self.user_workflow_code)),
+                machine,
+            )
+            self.animations.extend(
+                Explanation(
+                    target=machine,
+                    text="""
+                WORKFLOW_TASK_SCHEDULED is the first event in a sequence of workflow task
+                events. When the state machines encounter this event, they create a new instance
+                of WorkflowTaskStateMachine. 
+                """,
+                ).animate()
             )
 
         elif event.event_type == HistoryEventType.WFT_STARTED:
@@ -134,7 +146,7 @@ class WorkflowStateMachines(Entity):
             # later transitioning to complete, will complete the promise.
 
             # TODO: should be created by command and set promise-completing callback
-            self.add_machine(event, TimerStateMachine(self))
+            self.add_machine(event, TimerStateMachine(workflow_machines=self))
 
         elif event.event_type == HistoryEventType.TIMER_FIRED:
             # Look up TimerStateMachine instance and handle the event by calling the promise completion
@@ -151,7 +163,7 @@ class WorkflowStateMachines(Entity):
             # such that the promise is completed when the activity is completed.
 
             # TODO: should be created by command and set promise-completing callback
-            self.add_machine(event, ActivityTaskStateMachine(self))
+            self.add_machine(event, ActivityTaskStateMachine(workflow_machines=self))
 
         elif event.event_type == HistoryEventType.ACTIVITY_TASK_STARTED:
             self.state_machines[event.initiating_event_id].handle(event)

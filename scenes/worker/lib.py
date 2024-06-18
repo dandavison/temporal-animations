@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
+from collections import deque
 from dataclasses import dataclass, field
-from typing import ClassVar
+from typing import Callable, ClassVar
 
-from manim import Mobject, Scene
+from manim import Animation, Mobject, Scene, animation
 
 
 @dataclass
@@ -12,6 +13,9 @@ class Entity(ABC):
 
     This is a manim Mobject (self.mobj) that knows how to re-render itself.
     """
+
+    # A queue of lazily-evaluated animations to play after the entity is rendered.
+    animations: deque[Callable[[], Animation]] = field(default_factory=deque)
 
     # All entities have a shared reference to the current Manim scene.
     scene: ClassVar["EntityScene"]
@@ -29,6 +33,10 @@ class Entity(ABC):
         Mutate `self.mobj` so that it represents the current state of `entity` and update the scene.
         """
         self.mobj.become(self.render(**kwargs).move_to(self.mobj))
+        while self.animations:
+            animation = self.animations.popleft()()
+            print(f"playing animation {animation} for {self}")
+            self.scene.play(animation)
 
 
 @dataclass

@@ -13,7 +13,7 @@ from scenes.worker.utils import labeled_rectangle
 from schema import schema
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Scheduler(Entity):
     coroutines: Coroutines
 
@@ -36,9 +36,11 @@ class Scheduler(Entity):
         for command in commands_that_will_be_generated_in_this_wft:
             match command.command_type:
                 case schema.CommandType.SCHEDULE_ACTIVITY_TASK:
-                    command.machine = ActivityTaskStateMachine(machines)
+                    command.machine = ActivityTaskStateMachine(
+                        workflow_machines=machines
+                    )
                 case schema.CommandType.START_TIMER:
-                    command.machine = TimerStateMachine(machines)
+                    command.machine = TimerStateMachine(workflow_machines=machines)
                 case _:
                     raise ValueError(command.command_type)
             machines.commands_generated_by_user_workflow_code.append(command)

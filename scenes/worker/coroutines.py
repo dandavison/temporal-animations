@@ -11,7 +11,7 @@ COROUTINE_HEIGHT = 0.9
 BUF = 0.1
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Coroutine(Entity):
     id: int
 
@@ -27,7 +27,7 @@ class Coroutines(Entity):
 
     def add_coroutine(self, id: int):
         assert id not in self.coroutines
-        self.coroutines[id] = Coroutine(id)
+        self.coroutines[id] = Coroutine(id=id)
 
     def render(self) -> Mobject:
         container = ContainerRectangle(width=CONTAINER_WIDTH, height=CONTAINER_HEIGHT)
