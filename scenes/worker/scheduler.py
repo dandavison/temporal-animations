@@ -43,7 +43,7 @@ class Scheduler(Entity):
                     raise ValueError(command.command_type)
             machines.commands_generated_by_user_workflow_code.append(command)
 
-            if command.coroutine_id not in self.coroutines.ids:
+            if command.coroutine_id not in self.coroutines.coroutines:
                 self.coroutines.add_coroutine(command.coroutine_id)
 
     def render(self) -> Mobject:

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import ClassVar
 
 from manim import Mobject, Scene
@@ -14,7 +14,7 @@ class Entity(ABC):
     """
 
     # All entities have a shared reference to the current Manim scene.
-    scene: ClassVar[Scene]
+    scene: ClassVar["EntityScene"]
 
     def __post_init__(self, **kwargs) -> None:
         self.mobj = self.render(**kwargs)
@@ -24,11 +24,20 @@ class Entity(ABC):
         """Compute new visual representation given kwargs data."""
         ...
 
-    def render_to_scene(self, **kwargs):
+    def render_to_screen(self, **kwargs):
         """
         Mutate `self.mobj` so that it represents the current state of `entity` and update the scene.
         """
         self.mobj.become(self.render(**kwargs).move_to(self.mobj))
 
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}"
+
+@dataclass
+class EntityScene(Scene):
+    entities: dict[str, Entity] = field(default_factory=dict)
+
+    def __post_init__(self):
+        super().__init__()
+
+    def render_to_screen(self):
+        for entity in self.entities.values():
+            entity.render_to_screen()

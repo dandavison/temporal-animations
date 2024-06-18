@@ -1,13 +1,13 @@
 from collections import deque
 from dataclasses import dataclass, field
-from typing import Iterator, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterator, Optional
 
-from manim import RIGHT, Mobject, Scene
+from manim import RIGHT, Mobject, Scene, VGroup
 
 from scenes.worker.constants import CONTAINER_HEIGHT, CONTAINER_WIDTH
 from scenes.worker.history import HistoryEvent, HistoryEventId, HistoryEventType
 from scenes.worker.lib import Entity
-from scenes.worker.utils import ContainerRectangle, label_text
+from scenes.worker.utils import ContainerRectangle, label_text, labeled_rectangle
 from schema import schema
 
 if TYPE_CHECKING:
@@ -16,14 +16,13 @@ if TYPE_CHECKING:
 MACHINE_RADIUS = 0.3
 
 
+@dataclass
 class StateMachine:
+    workflow_machines: "WorkflowStateMachines"
+
     def render(self) -> Mobject:
         label = self.__class__.__name__.replace("StateMachine", "\nStateMachine")
-        return label_text(label, font="Monaco")
-
-    def __init__(self, workflow_machines: "WorkflowStateMachines") -> None:
-        super().__init__()
-        self.workflow_machines = workflow_machines
+        return labeled_rectangle(label, font="Monaco")
 
     def handle(self, event: HistoryEvent): ...
 
@@ -94,10 +93,7 @@ class WorkflowStateMachines(Entity):
     commands_generated_by_user_workflow_code: deque[Command] = field(
         default_factory=deque
     )
-    machines: dict[HistoryEventId, StateMachine] = field(default_factory=dict)
-
-    # TODO
-    n_machines: int = 0
+    state_machines: dict[HistoryEventId, StateMachine] = field(default_factory=dict)
 
     def handle_event(self, event: HistoryEvent):
 
@@ -121,12 +117,12 @@ class WorkflowStateMachines(Entity):
             # Look up WorkflowTaskStateMachine instance and handle the event.
             # The state machine transition calls runAllUntilBlocked() if this is the last
             # WFT_STARTED event in history (i.e. no WFT_COMPLETED for it yet).
-            self.machines[event.initiating_event_id].handle(event)
+            self.state_machines[event.initiating_event_id].handle(event)
 
         elif event.event_type == HistoryEventType.WFT_COMPLETED:
             # Look up WorkflowTaskStateMachine instance and handle the event.
             # The state machine transition calls runAllUntilBlocked().
-            self.machines[event.initiating_event_id].handle(event)
+            self.state_machines[event.initiating_event_id].handle(event)
 
         elif event.event_type == HistoryEventType.TIMER_STARTED:
             # Command event: see below
@@ -144,7 +140,7 @@ class WorkflowStateMachines(Entity):
             # Look up TimerStateMachine instance and handle the event by calling the promise completion
             # callback that was provided when the state machine was created.
             # see TimerStateMachine.java
-            self.machines[event.initiating_event_id].handle(event)
+            self.state_machines[event.initiating_event_id].handle(event)
 
         elif event.event_type == HistoryEventType.ACTIVITY_TASK_SCHEDULED:
             # Command event: see below
@@ -158,10 +154,10 @@ class WorkflowStateMachines(Entity):
             self.add_machine(event, ActivityTaskStateMachine(self))
 
         elif event.event_type == HistoryEventType.ACTIVITY_TASK_STARTED:
-            self.machines[event.initiating_event_id].handle(event)
+            self.state_machines[event.initiating_event_id].handle(event)
 
         elif event.event_type == HistoryEventType.ACTIVITY_TASK_COMPLETED:
-            self.machines[event.initiating_event_id].handle(event)
+            self.state_machines[event.initiating_event_id].handle(event)
 
         # Command events
         # --------------
@@ -184,11 +180,13 @@ class WorkflowStateMachines(Entity):
             command.machine.handle(event)
 
     def add_machine(self, initiating_event: HistoryEvent, machine: StateMachine):
-        self.machines[initiating_event.id] = machine
-        mobj = machine.render()
-        mobj.move_to(self.mobj).shift(RIGHT * self.n_machines * MACHINE_RADIUS)
-        self.scene.add(mobj)
-        self.n_machines += 1
+        self.state_machines[initiating_event.id] = machine
 
-    def render(self):
-        return ContainerRectangle(width=CONTAINER_WIDTH, height=CONTAINER_HEIGHT)
+    def render(self) -> Mobject:
+        container = ContainerRectangle(width=CONTAINER_WIDTH, height=CONTAINER_HEIGHT)
+        state_machines = VGroup(
+            *(c.render() for _, c in sorted(self.state_machines.items()))
+        ).move_to(container)
+        if self.state_machines:
+            state_machines.arrange_in_grid()
+        return VGroup(container, state_machines)

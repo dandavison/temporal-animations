@@ -20,7 +20,7 @@ class ContainerRectangle(Rectangle):
 
 
 def labeled_rectangle(label: str, **kwargs) -> Mobject:
-    text = label_text(label)
+    text = label_text(label, **kwargs)
     rect = SurroundingRectangle(
         text,
         color=style.COLOR_HISTORY_EVENT_GROUP_RECT,
