@@ -5,6 +5,7 @@ import sys
 from typing import Iterator, cast
 
 from manim import (
+    LEFT,
     UR,
     Camera,
     Create,
@@ -15,6 +16,7 @@ from manim import (
     SurroundingRectangle,
     Text,
     VGroup,
+    VMobject,
 )
 
 from manim_renderer import style
@@ -89,50 +91,53 @@ class WorkerScene(Scene):
         self.camera.background_color = COLOR_SCENE_BACKGROUND
         self.play(Create(self.make_grid()))
 
-    def make_grid(self) -> Mobject:
-        items = [
-            ("", "Scheduler"),
-            ("Coroutines", ""),
-            ("State Machines", ""),
-            ("", "Poller"),
-            ("", "Server"),
+    def make_grid(self):
+        h, w = 3, 7
+        self.scheduler_mobj = labeled_rectangle("Scheduler")
+        self.coroutines_mobj = ContainerRectangle(width=w, height=h)
+        self.state_machines_mobj = ContainerRectangle(width=w, height=h)
+        rows = [
+            (VMobject(), self.scheduler_mobj),
+            (label_text("Coroutines"), self.coroutines_mobj),
+            (label_text("State machines"), self.state_machines_mobj),
         ]
-
-        rows = [(label_text(left), rectangle(right)) for left, right in items]
-
-        # TODO: cleanup
-        self.scheduler_mobj = rows[0][1]
-        self.coroutines_mobj = rows[1][1]
-        self.state_machines_mobj = rows[2][1]
-
-        return VGroup(*chain.from_iterable(rows)).arrange_in_grid(cols=2)
-
-
-def grid_blank_rows(nlines: int) -> list[tuple[str, str]]:
-    return [("", "")] * nlines
+        return (
+            VGroup(*chain.from_iterable(rows))
+            .arrange_in_grid(
+                cols=2,
+                col_widths=[None, w],
+                row_heights=[0.5, h, h],
+                buff=0.5,
+            )
+            .align_on_border(LEFT)
+        )
 
 
-def label_text(text: str) -> Text:
-    return Text(text, font_size=16)
+class ContainerRectangle(Rectangle):
+    def __init__(self, **kwargs):
+        super().__init__(
+            color=style.COLOR_SCENE_BACKGROUND,
+            stroke_width=style.STROKE_WIDTH_HISTORY_EVENT_GROUP_RECT,
+            fill_color=style.COLOR_SCENE_BACKGROUND,
+            fill_opacity=1,
+            **kwargs,
+        )
 
 
-def rectangle(label: str) -> Mobject:
-    kwargs = dict(
+def labeled_rectangle(label: str, **kwargs) -> Mobject:
+    text = label_text(label)
+    rect = SurroundingRectangle(
+        text,
         color=style.COLOR_HISTORY_EVENT_GROUP_RECT,
         stroke_width=style.STROKE_WIDTH_HISTORY_EVENT_GROUP_RECT,
         fill_color=style.COLOR_SCENE_BACKGROUND,
         fill_opacity=1,
     )
-    if label:
-        return labeled_rectangle(label, **kwargs)
-    return Rectangle(**kwargs)  # type: ignore
-
-
-def labeled_rectangle(label: str, **kwargs) -> Mobject:
-
-    text = label_text(label)
-    rect = SurroundingRectangle(text, **kwargs)
     return VGroup(rect, text)
+
+
+def label_text(text: str) -> Text:
+    return Text(text, font_size=16)
 
 
 def read_events() -> Iterator[schema.Event]:
