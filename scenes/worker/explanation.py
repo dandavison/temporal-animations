@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Callable, Iterable
-from manim import UR, Animation, Mobject, Wait
+from manim import DL, UR, Animation, AnimationGroup, Arrow, Mobject, VGroup, Wait
 from scenes.worker.lib import Entity
 from textwrap import wrap
 
@@ -15,7 +15,12 @@ class Explanation(Entity):
     text: str
 
     def render(self) -> Mobject:
-        return labeled_rectangle("\n".join(wrap(self.text, 40))).align_on_border(UR)
+        rect = labeled_rectangle("\n".join(wrap(self.text, 40))).align_on_border(UR)
+        arrow = Arrow(
+            start=rect.get_boundary_point(DL),
+            end=self.target.mobj.get_boundary_point(UR),
+        )
+        return VGroup(rect, arrow)
 
     def animate(self) -> Iterable[Callable[[], Animation]]:
         mobj = self.render()
