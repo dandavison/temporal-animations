@@ -1,11 +1,10 @@
 from dataclasses import dataclass
-from typing import Callable, Iterable
-from manim import DL, UR, Animation, AnimationGroup, Arrow, Mobject, VGroup, Wait
-from scenes.worker.lib import Entity
 from textwrap import wrap
+from typing import Callable, Iterable
 
-from manim import FadeIn, FadeOut, Mobject
+from manim import DL, UR, Animation, Arrow, FadeIn, FadeOut, Mobject, VGroup, Wait
 
+from scenes.worker.lib import Entity
 from scenes.worker.utils import labeled_rectangle
 
 

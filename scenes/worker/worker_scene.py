@@ -1,23 +1,16 @@
-from itertools import chain
 import sys
+from itertools import chain
 
-from manim import (
-    LEFT,
-    Camera,
-    Create,
-    Scene,
-    VGroup,
-    VMobject,
-)
+from manim import LEFT, Camera, Create, VGroup, VMobject
 
 from manim_renderer.style import COLOR_SCENE_BACKGROUND
 from scenes.worker.constants import CONTAINER_HEIGHT, CONTAINER_WIDTH
 from scenes.worker.coroutines import Coroutines
-from scenes.worker.scheduler import Scheduler
-from scenes.worker.utils import label_text
-from scenes.worker.input import history, commands
-from scenes.worker.state_machines import WorkflowStateMachines
+from scenes.worker.input import commands, history
 from scenes.worker.lib import Entity, EntityScene
+from scenes.worker.scheduler import Scheduler
+from scenes.worker.state_machines import WorkflowStateMachines
+from scenes.worker.utils import label_text
 
 
 class WorkerScene(EntityScene):
