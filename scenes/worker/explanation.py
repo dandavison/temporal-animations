@@ -23,10 +23,9 @@ class Explanation(Entity):
         return VGroup(rect, arrow)
 
     def animate(self) -> Iterable[Callable[[], Animation]]:
-        mobj = self.render()
-        yield lambda: FadeIn(mobj)
-        yield lambda: Wait(10)
-        yield lambda: FadeOut(mobj)
+        yield lambda: FadeIn(self.render())
+        yield lambda: Wait(5)
+        yield lambda: FadeOut(self.render())
 
         # TODO: This draws nothing on the screen. Why?
         # return AnimationGroup(FadeIn(mobj), Wait(), FadeOut(mobj))

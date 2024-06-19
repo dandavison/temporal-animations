@@ -197,7 +197,7 @@ class WorkflowStateMachines(Entity):
     def render(self) -> Mobject:
         container = ContainerRectangle(width=CONTAINER_WIDTH, height=CONTAINER_HEIGHT)
         state_machines = VGroup(
-            *(c.render() for _, c in sorted(self.state_machines.items()))
+            *(c.mobj for _, c in sorted(self.state_machines.items()))
         ).move_to(container)
         if self.state_machines:
             state_machines.arrange_in_grid()
