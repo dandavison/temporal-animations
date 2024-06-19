@@ -1,11 +1,12 @@
 from dataclasses import dataclass
 
-from manim import Mobject
+from manim import FadeIn, Line, Mobject
+
 from scenes.worker.coroutines import Coroutines
 from scenes.worker.lib import Entity
 from scenes.worker.state_machines import (
-    Command,
     ActivityTaskStateMachine,
+    Command,
     TimerStateMachine,
     WorkflowStateMachines,
 )
@@ -47,6 +48,20 @@ class Scheduler(Entity):
 
             if command.coroutine_id not in self.coroutines.coroutines:
                 self.coroutines.add_coroutine(command.coroutine_id)
+
+            coroutine = self.coroutines.coroutines[command.coroutine_id]
+
+            def create_smbp_anim():
+                assert command.machine
+                return FadeIn(
+                    Line(
+                        start=coroutine.mobj.get_center(),
+                        end=command.machine.mobj.get_center(),
+                    )
+                )
+
+            coroutine.animations.append(create_smbp_anim)
+            self.animations.append(create_smbp_anim)
 
     def render(self) -> Mobject:
         return labeled_rectangle("Scheduler")
