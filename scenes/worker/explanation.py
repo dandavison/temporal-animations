@@ -2,7 +2,18 @@ from dataclasses import dataclass
 from textwrap import wrap
 from typing import Callable, Iterable
 
-from manim import DL, UR, Animation, Arrow, FadeIn, FadeOut, Mobject, VGroup, Wait
+from manim import (
+    DL,
+    UR,
+    Animation,
+    AnimationGroup,
+    Arrow,
+    FadeIn,
+    FadeOut,
+    Mobject,
+    VGroup,
+    Wait,
+)
 
 from scenes.worker.lib import Entity
 from scenes.worker.utils import labeled_rectangle
@@ -21,10 +32,7 @@ class Explanation(Entity):
         )
         return VGroup(rect, arrow)
 
-    def animate(self) -> Iterable[Callable[[], Animation]]:
-        yield lambda: FadeIn(self.render())
-        yield lambda: Wait(5)
-        yield lambda: FadeOut(self.render())
-
-        # TODO: This draws nothing on the screen. Why?
-        # return AnimationGroup(FadeIn(mobj), Wait(), FadeOut(mobj))
+    def animate(self) -> Animation:
+        return AnimationGroup(
+            FadeIn(self.mobj), Wait(5), FadeOut(self.mobj), lag_ratio=1
+        )
