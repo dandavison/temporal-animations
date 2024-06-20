@@ -3,7 +3,7 @@ from collections import deque
 from dataclasses import dataclass, field
 from typing import Callable, ClassVar
 
-from manim import Animation, Mobject, Scene, animation
+from manim import Animation, Scene, VMobject
 
 
 @dataclass
@@ -24,7 +24,7 @@ class Entity(ABC):
         self.mobj = self.render(**kwargs)
 
     @abstractmethod
-    def render(self, **kwargs) -> Mobject:
+    def render(self, **kwargs) -> VMobject:
         """Compute new visual representation given kwargs data."""
         ...
 
