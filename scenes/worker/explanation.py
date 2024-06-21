@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from textwrap import wrap
-from typing import Callable, Iterable
 
 from manim import (
     DL,

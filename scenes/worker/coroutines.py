@@ -3,8 +3,8 @@ from dataclasses import dataclass, field
 from manim import Mobject, VGroup
 
 from scenes.worker.constants import CONTAINER_HEIGHT, CONTAINER_WIDTH
-from scenes.worker.utils import ContainerRectangle, labeled_rectangle
 from scenes.worker.lib import Entity
+from scenes.worker.utils import ContainerRectangle, labeled_rectangle
 
 COROUTINE_WIDTH = 0.3
 COROUTINE_HEIGHT = 0.9
