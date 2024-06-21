@@ -14,7 +14,7 @@ from scenes.worker.utils import labeled_rectangle
 from schema import schema
 
 
-@dataclass(kw_only=True)
+@dataclass
 class Scheduler(Entity):
     coroutines: Coroutines
 

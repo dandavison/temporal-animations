@@ -11,7 +11,7 @@ COROUTINE_HEIGHT = 0.9
 BUF = 0.1
 
 
-@dataclass(kw_only=True)
+@dataclass
 class Coroutine(Entity):
     id: int
 

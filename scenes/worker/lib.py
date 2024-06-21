@@ -14,14 +14,14 @@ class Entity(ABC):
     This is a manim Mobject (self.mobj) that knows how to re-render itself.
     """
 
-    # A queue of lazily-evaluated animations to play after the entity is rendered.
-    animations: deque[Callable[[], Animation]] = field(default_factory=deque)
-
     # All entities have a shared reference to the current Manim scene.
     scene: ClassVar["EntityScene"]
 
     def __post_init__(self, **kwargs) -> None:
         self.mobj = self.render(**kwargs)
+
+        # A queue of lazily-evaluated animations to play after the entity is rendered.
+        self.animations: deque[Callable[[], Animation]] = field(default_factory=deque)
 
     @abstractmethod
     def render(self, **kwargs) -> VMobject:

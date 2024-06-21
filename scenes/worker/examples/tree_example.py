@@ -6,7 +6,7 @@ from manim import DL, DR, LEFT, RIGHT, Create, Scene, Text, VGroup, VMobject
 from scenes.worker.lib import Entity
 
 
-@dataclass(kw_only=True)
+@dataclass
 class Node(Entity):
     name: str
     left: Optional["Node"] = None

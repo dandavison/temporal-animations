@@ -19,7 +19,7 @@ from scenes.worker.lib import Entity
 from scenes.worker.utils import labeled_rectangle
 
 
-@dataclass(kw_only=True)
+@dataclass
 class Explanation(Entity):
     target: Entity
     text: str

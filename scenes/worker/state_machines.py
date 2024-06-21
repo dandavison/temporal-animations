@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 MACHINE_RADIUS = 0.3
 
 
-@dataclass(kw_only=True)
+@dataclass
 class StateMachine(Entity):
     workflow_machines: "WorkflowStateMachines"
 
@@ -86,7 +86,7 @@ class TimerStateMachine(StateMachine):
                 raise ValueError(event)
 
 
-@dataclass(kw_only=True)
+@dataclass
 class WorkflowStateMachines(Entity):
     scheduler: "Scheduler"
     # User workflow code is represented by a stream of batches of commands generated in each WFT.
