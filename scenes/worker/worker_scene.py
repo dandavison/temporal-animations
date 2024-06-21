@@ -16,7 +16,6 @@ from scenes.worker.utils import label_text
 class WorkerScene(EntityScene):
 
     def _construct(self):
-        Entity.scene = self
         self.coroutines = Coroutines()
         self.scheduler = Scheduler(coroutines=self.coroutines)
         self.state_machines = WorkflowStateMachines(

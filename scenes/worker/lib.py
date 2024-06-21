@@ -46,6 +46,9 @@ class EntityScene(Scene):
     def __post_init__(self):
         super().__init__()
 
+        assert not hasattr(Entity, "scene"), "You can only create one EntityScene."
+        Entity.scene = self
+
     def render_to_screen(self):
         for entity in self.entities.values():
             entity.render_to_screen()
