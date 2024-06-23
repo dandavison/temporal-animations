@@ -1,8 +1,8 @@
 from dataclasses import dataclass
-from textwrap import wrap
 
 from manim import (
     DL,
+    UL,
     UR,
     Animation,
     AnimationGroup,
@@ -10,28 +10,43 @@ from manim import (
     FadeIn,
     FadeOut,
     Mobject,
+    SurroundingRectangle,
+    Tex,
     VGroup,
     Wait,
 )
 
 from scenes.worker.lib import Entity
-from scenes.worker.utils import labeled_rectangle
 
 
 @dataclass
 class Explanation(Entity):
     target: Entity
     text: str
+    width: str = "20em"
+    font_family: str = r"\sffamily"
+    justfication: str = r"\raggedright"
 
     def render(self) -> Mobject:
-        rect = labeled_rectangle("\n".join(wrap(self.text, 40))).align_on_border(UR)
+        text = f"{{{self.width}}} {self.font_family} {self.justfication}" + tex_escape(
+            self.text
+        )
+        tex = Tex(text, tex_environment="minipage", font_size=16)
+        rect = SurroundingRectangle(
+            tex, buff=0.2, color=0x2F2F2F, corner_radius=0.5, fill_opacity=1
+        )
+        box = VGroup(rect, tex).to_corner(UR)
         arrow = Arrow(
-            start=rect.get_boundary_point(DL),
+            start=box.get_boundary_point(UL),
             end=self.target.mobj.get_boundary_point(UR),
         )
-        return VGroup(rect, arrow)
+        return VGroup(box, arrow)
 
     def animate(self) -> Animation:
         return AnimationGroup(
             FadeIn(self.mobj), Wait(5), FadeOut(self.mobj), lag_ratio=1
         )
+
+
+def tex_escape(s: str) -> str:
+    return s.replace("_", r"\_")

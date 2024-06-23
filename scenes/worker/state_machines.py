@@ -117,7 +117,7 @@ class WorkflowStateMachines(Entity):
             self.animations.append(
                 lambda: Explanation(
                     target=machine,
-                    text="""
+                    tex="""
                 WORKFLOW_TASK_SCHEDULED is the first event in a sequence of workflow task
                 events. When the state machines encounter this event, they create a new instance
                 of WorkflowTaskStateMachine. 

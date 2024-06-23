@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from manim import DL, DOWN, DR, UP, Line, Scene, Text, VMobject
+from manim import DL, DOWN, DR, UP, Line, Text, VMobject
 
 from scenes.worker.explanation import Explanation
 from scenes.worker.lib import Entity, EntityScene
@@ -37,11 +37,15 @@ class Lamp(Object):
         self.mobj.add(self.ray.mobj)
         explanation = Explanation(
             self.ray,
-            text="""
-WORKFLOW_TASK_SCHEDULED is the first event in a sequence of workflow task
-events. When the state machines encounter this event, they create a new instance
-of WorkflowTaskStateMachine. 
-""",
+            text=r"""
+WORKFLOW_TASK_SCHEDULED is the first event in a sequence of workflow task events. When the state
+machines encounter this event, they create a new instance of WorkflowTaskStateMachine.
+WORKFLOW_TASK_SCHEDULED is the first event in a sequence of workflow task events. When the state
+machines encounter this event, they create a new instance of
+WorkflowTaskStateMachine.WORKFLOW_TASK_SCHEDULED is the first event in a sequence of workflow task
+events.""".replace(
+                "\n", " "
+            ),
         )
         self.scene.play(explanation.animate())
 
@@ -73,7 +77,7 @@ class RoomScene(EntityScene):
 
         # Simulation
 
-        for i in range(3):
+        for i in range(1):
             person.sit(chair1 if i % 2 else chair2)
             self.wait(1)
             lamp.shine_on(person)
