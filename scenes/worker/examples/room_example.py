@@ -2,7 +2,8 @@ from dataclasses import dataclass
 
 from manim import DL, DOWN, DR, UP, Line, Scene, Text, VMobject
 
-from scenes.worker.lib import Entity
+from scenes.worker.explanation import Explanation
+from scenes.worker.lib import Entity, EntityScene
 
 
 @dataclass
@@ -34,6 +35,15 @@ class Lamp(Object):
     def shine_on(self, person: "Person"):
         self.ray = Ray(start=self, end=person)
         self.mobj.add(self.ray.mobj)
+        explanation = Explanation(
+            self.ray,
+            text="""
+WORKFLOW_TASK_SCHEDULED is the first event in a sequence of workflow task
+events. When the state machines encounter this event, they create a new instance
+of WorkflowTaskStateMachine. 
+""",
+        )
+        self.scene.play(explanation.animate())
 
 
 class Chair(Object):
@@ -45,7 +55,7 @@ class Person(Object):
         self.mobj.move_to(chair.mobj, aligned_edge=UP).shift(UP * 0.5)
 
 
-class RoomScene(Scene):
+class RoomScene(EntityScene):
     def construct(self):
 
         # Initialization
@@ -63,7 +73,7 @@ class RoomScene(Scene):
 
         # Simulation
 
-        for i in range(5):
+        for i in range(3):
             person.sit(chair1 if i % 2 else chair2)
             self.wait(1)
             lamp.shine_on(person)
