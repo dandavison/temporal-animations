@@ -32,20 +32,12 @@ class Lamp(Object):
     def off(self):
         self.mobj.remove(self.ray.mobj)
 
-    def shine_on(self, person: "Person"):
-        self.ray = Ray(start=self, end=person)
+    def shine_on(self, chair: "Chair"):
+        self.ray = Ray(start=self, end=chair)
         self.mobj.add(self.ray.mobj)
         explanation = Explanation(
-            self.ray,
-            text=r"""
-WORKFLOW_TASK_SCHEDULED is the first event in a sequence of workflow task events. When the state
-machines encounter this event, they create a new instance of WorkflowTaskStateMachine.
-WORKFLOW_TASK_SCHEDULED is the first event in a sequence of workflow task events. When the state
-machines encounter this event, they create a new instance of
-WorkflowTaskStateMachine.WORKFLOW_TASK_SCHEDULED is the first event in a sequence of workflow task
-events.""".replace(
-                "\n", " "
-            ),
+            chair,
+            latex=f"""The lamp is shining on {chair.name}, because the direction of the lamp intersects with that chair.""",
         )
         self.scene.play(explanation.animate())
 
@@ -61,7 +53,6 @@ class Person(Object):
 
 class RoomScene(EntityScene):
     def construct(self):
-
         # Initialization
 
         chair1 = Chair(name="chair 1")
@@ -78,8 +69,9 @@ class RoomScene(EntityScene):
         # Simulation
 
         for i in range(1):
-            person.sit(chair1 if i % 2 else chair2)
+            chair = chair1 if i % 2 else chair2
+            person.sit(chair)
             self.wait(1)
-            lamp.shine_on(person)
+            lamp.shine_on(chair)
             self.wait(1)
             lamp.off()
