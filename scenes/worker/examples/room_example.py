@@ -32,12 +32,15 @@ class Lamp(Object):
     def off(self):
         self.mobj.remove(self.ray.mobj)
 
-    def shine_on(self, chair: "Chair"):
-        self.ray = Ray(start=self, end=chair)
+    def shine_on(self, object: "Object"):
+        self.ray = Ray(start=self, end=object)
         self.mobj.add(self.ray.mobj)
         explanation = Explanation(
-            chair,
-            latex=f"""The lamp is shining on {chair.name}, because the direction of the lamp intersects with that chair.""",
+            object,
+            latex=(
+                f"The lamp is shining on {object.name}, because the direction of the lamp intersects with its location."
+                "This is roughly how lamps work."
+            ),
         )
         for anim in explanation.animate():
             self.scene.play(anim)
@@ -73,6 +76,6 @@ class RoomScene(EntityScene):
             chair = chair1 if i % 2 else chair2
             person.sit(chair)
             self.wait(1)
-            lamp.shine_on(chair)
+            lamp.shine_on(person)
             self.wait(1)
             lamp.off()

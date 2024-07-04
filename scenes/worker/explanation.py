@@ -3,7 +3,10 @@ from typing import Iterable
 
 from manim import (
     DL,
+    DOWN,
+    LEFT,
     UL,
+    UP,
     UR,
     Animation,
     Arrow,
@@ -35,14 +38,16 @@ class Explanation(Entity):
             tex,
             buff=0.2,
             color=self.background_color,
-            corner_radius=0.5,
+            corner_radius=0.2,
             fill_opacity=1,
         )
         box = VGroup(rect, tex).to_corner(UR)
         arrow = Arrow(
-            start=box.get_boundary_point(UL),
+            start=box.get_boundary_point(DOWN),
+            buff=0,
             end=self.target.mobj.get_boundary_point(UR),
             color=self.background_color,
+            max_tip_length_to_length_ratio=0.05,
         )
         return VGroup(box, arrow)
 
