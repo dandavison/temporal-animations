@@ -39,7 +39,8 @@ class Lamp(Object):
             chair,
             latex=f"""The lamp is shining on {chair.name}, because the direction of the lamp intersects with that chair.""",
         )
-        self.scene.play(explanation.animate())
+        for anim in explanation.animate():
+            self.scene.play(anim)
 
 
 class Chair(Object):

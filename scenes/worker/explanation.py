@@ -1,11 +1,11 @@
 from dataclasses import dataclass
+from typing import Iterable
 
 from manim import (
     DL,
     UL,
     UR,
     Animation,
-    AnimationGroup,
     Arrow,
     FadeIn,
     FadeOut,
@@ -46,10 +46,10 @@ class Explanation(Entity):
         )
         return VGroup(box, arrow)
 
-    def animate(self) -> Animation:
-        return AnimationGroup(
-            FadeIn(self.mobj), Wait(1), FadeOut(self.mobj), lag_ratio=1
-        )
+    def animate(self) -> Iterable[Animation]:
+        yield FadeIn(self.mobj)
+        yield Wait(1)
+        yield FadeOut(self.mobj)
 
 
 def tex_escape(s: str) -> str:
