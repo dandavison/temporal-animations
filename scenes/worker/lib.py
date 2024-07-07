@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from collections import deque
 from dataclasses import dataclass, field
-from typing import Callable, ClassVar
+from typing import Callable, ClassVar, Iterable
 
 from manim import Animation, Scene, VMobject
 
@@ -21,7 +21,7 @@ class Entity(ABC):
         self.mobj = self.render(**kwargs)
 
         # A queue of lazily-evaluated animations to play after the entity is rendered.
-        self.animations: deque[Callable[[], Animation]] = field(default_factory=deque)
+        self.animations: deque[Callable[[], Iterable[Animation]]] = deque()
 
     @abstractmethod
     def render(self, **kwargs) -> VMobject:
@@ -34,9 +34,9 @@ class Entity(ABC):
         """
         self.mobj.become(self.render(**kwargs).move_to(self.mobj))
         while self.animations:
-            animation = self.animations.popleft()()
-            print(f"playing animation {animation} for {self}")
-            self.scene.play(animation)
+            for anim in self.animations.popleft()():
+                print(f"playing animation {anim} for {self}")
+                self.scene.play(anim)
 
 
 @dataclass

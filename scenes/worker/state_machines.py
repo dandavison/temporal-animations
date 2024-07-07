@@ -97,7 +97,6 @@ class WorkflowStateMachines(Entity):
     state_machines: dict[HistoryEventId, StateMachine] = field(default_factory=dict)
 
     def handle_event(self, event: HistoryEvent):
-
         # TODO: self.is_replaying
 
         if event.event_type == HistoryEventType.WF_STARTED:
@@ -117,8 +116,8 @@ class WorkflowStateMachines(Entity):
             self.animations.append(
                 lambda: Explanation(
                     target=machine,
-                    latex="""
-                WORKFLOW_TASK_SCHEDULED is the first event in a sequence of workflow task
+                    latex=r"""
+                WORKFLOW\_TASK\_SCHEDULED is the first event in a sequence of workflow task
                 events. When the state machines encounter this event, they create a new instance
                 of WorkflowTaskStateMachine. 
                 """,

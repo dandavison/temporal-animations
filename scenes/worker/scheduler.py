@@ -60,8 +60,8 @@ class Scheduler(Entity):
                     )
                 )
 
-            coroutine.animations.append(create_smbp_anim)
-            self.animations.append(create_smbp_anim)
+            # coroutine.animations.append(create_smbp_anim)
+            # self.animations.append(create_smbp_anim)
 
     def render(self) -> Mobject:
         return labeled_rectangle("Scheduler")
