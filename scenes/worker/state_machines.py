@@ -22,11 +22,14 @@ MACHINE_RADIUS = 0.3
 class StateMachine(esv.Entity):
     workflow_machines: "WorkflowStateMachines"
 
+    def handle(self, event: "input.Event") -> None:
+        self.handle_history_event(event.history_event)
+
     def render(self) -> Mobject:
         label = self.__class__.__name__.replace("StateMachine", "\nStateMachine")
         return labeled_rectangle(label, font="Monaco")
 
-    def handle(self, event: HistoryEvent): ...
+    def handle_history_event(self, event: HistoryEvent): ...
 
 
 @dataclass
@@ -49,7 +52,7 @@ class WorkflowTaskStateMachine(StateMachine):
             commands_that_will_be_generated_in_this_wft
         )
 
-    def handle(self, event: HistoryEvent):
+    def handle_history_event(self, event: HistoryEvent):
         match event.event_type:
             case HistoryEventType.WFT_SCHEDULED:
                 print("WFT_SCHEDULED")
@@ -66,7 +69,7 @@ class WorkflowTaskStateMachine(StateMachine):
 
 
 class ActivityTaskStateMachine(StateMachine):
-    def handle(self, event: HistoryEvent):
+    def handle_history_event(self, event: HistoryEvent):
         match event.event_type:
             case HistoryEventType.ACTIVITY_TASK_SCHEDULED:
                 print("AT_SCHEDULED")
@@ -79,7 +82,7 @@ class ActivityTaskStateMachine(StateMachine):
 
 
 class TimerStateMachine(StateMachine):
-    def handle(self, event: HistoryEvent):
+    def handle_history_event(self, event: HistoryEvent):
         match event.event_type:
             case HistoryEventType.TIMER_STARTED:
                 print("TIMER_STARTED")
@@ -135,12 +138,13 @@ class WorkflowStateMachines(esv.Entity):
             # Look up WorkflowTaskStateMachine instance and handle the event.
             # The state machine transition calls runAllUntilBlocked() if this is the last
             # WFT_STARTED event in history (i.e. no WFT_COMPLETED for it yet).
-            self.state_machines[event.initiating_event_id].handle(event)
+            machine = self.state_machines[event.initiating_event_id]
+            machine.handle_history_event(event)
 
         elif event.event_type == HistoryEventType.WFT_COMPLETED:
             # Look up WorkflowTaskStateMachine instance and handle the event.
             # The state machine transition calls runAllUntilBlocked().
-            self.state_machines[event.initiating_event_id].handle(event)
+            self.state_machines[event.initiating_event_id].handle_history_event(event)
 
         elif event.event_type == HistoryEventType.TIMER_STARTED:
             # Command event: see below
@@ -160,7 +164,7 @@ class WorkflowStateMachines(esv.Entity):
             # Look up TimerStateMachine instance and handle the event by calling the promise completion
             # callback that was provided when the state machine was created.
             # see TimerStateMachine.java
-            self.state_machines[event.initiating_event_id].handle(event)
+            self.state_machines[event.initiating_event_id].handle_history_event(event)
 
         elif event.event_type == HistoryEventType.ACTIVITY_TASK_SCHEDULED:
             # Command event: see below
@@ -179,10 +183,10 @@ class WorkflowStateMachines(esv.Entity):
             )
 
         elif event.event_type == HistoryEventType.ACTIVITY_TASK_STARTED:
-            self.state_machines[event.initiating_event_id].handle(event)
+            self.state_machines[event.initiating_event_id].handle_history_event(event)
 
         elif event.event_type == HistoryEventType.ACTIVITY_TASK_COMPLETED:
-            self.state_machines[event.initiating_event_id].handle(event)
+            self.state_machines[event.initiating_event_id].handle_history_event(event)
 
         # Command events
         # --------------
@@ -202,7 +206,7 @@ class WorkflowStateMachines(esv.Entity):
             command = self.commands_generated_by_user_workflow_code.popleft()
             assert event.event_type.matches_command_type(command.command_type)
             assert command.machine
-            command.machine.handle(event)
+            command.machine.handle_history_event(event)
 
     def add_machine(self, initiating_event: HistoryEvent, machine: StateMachine):
         self.state_machines[initiating_event.id] = machine
