@@ -24,9 +24,7 @@ class WorkerScene(esv.Scene):
         #     entity.handle(event)
 
         self.state_machines.handle(event)
-
-        event.history_event.seen_by_worker = True
-        self.history.applied_events.append(event.history_event)
+        self.history.handle(event)
 
         # Render model updates to screen
         for entity in self.entities.values():

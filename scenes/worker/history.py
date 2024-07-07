@@ -1,12 +1,16 @@
 from collections import deque
 from dataclasses import dataclass
-from typing import Iterable
+from typing import TYPE_CHECKING, Iterable
 
 import esv
 from manim import DR, RIGHT, VDict, VMobject
 
 from manim_renderer.workflow_task import BoxedHistoryEvents
 from schema import schema
+
+if TYPE_CHECKING:
+    from scenes.worker import input
+
 
 HistoryEventId = int
 
@@ -27,6 +31,10 @@ class History(esv.Entity):
         self.unapplied_events = deque(self.events)
         self.applied_events = deque([])
         super().__post_init__()
+
+    def handle(self, event: "input.Event"):
+        event.history_event.seen_by_worker = True
+        self.applied_events.append(event.history_event)
 
     def render(self) -> VMobject:
         return VDict(
