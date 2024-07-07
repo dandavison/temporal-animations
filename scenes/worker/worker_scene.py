@@ -20,11 +20,8 @@ class WorkerScene(esv.Scene):
 
     def handle(self, event: input.Event):
         # Mutate model state
-        # for entity in self.entities.values():
-        #     entity.handle(event)
-
-        self.state_machines.handle(event)
-        self.history.handle(event)
+        for entity in self.entities.values():
+            entity.handle(event)
 
         # Render model updates to screen
         for entity in self.entities.values():

@@ -13,6 +13,9 @@ BUF = 0.1
 
 @dataclass
 class Coroutine(esv.Entity):
+    def handle(self, event: esv.Event):
+        pass
+
     def render(self):
         return labeled_rectangle(
             f"Coroutine {self.name}" if self.name != "0" else "Main Workflow\nCoroutine"
@@ -22,6 +25,9 @@ class Coroutine(esv.Entity):
 @dataclass
 class Coroutines(esv.Entity):
     coroutines: dict[str, Coroutine] = field(default_factory=dict)
+
+    def handle(self, event: esv.Event):
+        pass
 
     def add_coroutine(self, id: str):
         assert id not in self.coroutines

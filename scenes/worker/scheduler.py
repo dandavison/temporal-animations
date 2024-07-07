@@ -18,6 +18,9 @@ from schema import schema
 class Scheduler(esv.Entity):
     coroutines: Coroutines
 
+    def handle(self, event: esv.Event):
+        pass
+
     def run_all_coroutines_until_blocked(
         self,
         commands_that_will_be_generated_in_this_wft: list[Command],
