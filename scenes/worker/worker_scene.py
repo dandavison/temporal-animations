@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from itertools import chain
 from typing import Iterable
 
@@ -6,34 +5,33 @@ import esv
 from manim import LEFT, Camera, Create, VGroup, VMobject
 
 from manim_renderer import style
+from scenes.worker import input
 from scenes.worker.constants import CONTAINER_HEIGHT, CONTAINER_WIDTH
 from scenes.worker.coroutines import Coroutines
-from scenes.worker.history import HistoryEvent
-from scenes.worker.input import commands, history
+from scenes.worker.history import History
 from scenes.worker.scheduler import Scheduler
 from scenes.worker.state_machines import WorkflowStateMachines
 from scenes.worker.utils import label_text
 
 
-@dataclass
-class Event(esv.Event):
-    history_event: HistoryEvent
-
-
 class WorkerScene(esv.Scene):
-    def events(self) -> Iterable[esv.Event]:
-        return (Event(e) for e in history.unapplied_events)
+    def events(self) -> Iterable[input.Event]:
+        return (input.Event(e) for e in input.history_events)
 
-    def handle(self, event: Event):
-        self.state_machines.handle_history_event(event.history_event)
+    def handle(self, event: input.Event):
+        # Mutate model state
+        # for entity in self.entities.values():
+        #     entity.handle(event)
 
-        self.state_machines.render_to_screen()
-        self.coroutines.render_to_screen()
+        self.state_machines.handle(event)
 
         event.history_event.seen_by_worker = True
-        history.applied_events.append(event.history_event)
-        self.unapplied_events_mobj.become(history.render_unapplied())
-        self.applied_events_mobj.become(history.render_applied())
+        self.history.applied_events.append(event.history_event)
+
+        # Render model updates to screen
+        for entity in self.entities.values():
+            entity.render_to_screen()
+
         self.wait(2)
 
     def init(self) -> None:
@@ -45,7 +43,7 @@ class WorkerScene(esv.Scene):
         self.state_machines = WorkflowStateMachines(
             "WorkflowStateMachines",
             scheduler=self.scheduler,
-            user_workflow_code=iter(commands),
+            user_workflow_code=iter(input.commands),
         )
 
         # Main layout is a grid. The left column contains labels, and the right
@@ -69,13 +67,12 @@ class WorkerScene(esv.Scene):
         )
         self.play(Create(grid))
 
-        self.unapplied_events_mobj = history.render_unapplied()
-        self.applied_events_mobj = history.render_applied()
-        self.add(self.unapplied_events_mobj)
-        self.add(self.applied_events_mobj)
-        self.wait(2)
-        self.entities = {
+        self.history = history = History(name="History", events=input.history_events)
+        self.add(history.mobj)
+        self.entities: dict[str, esv.Entity] = {
             "coroutines": self.coroutines,
             "scheduler": self.scheduler,
             "state_machines": self.state_machines,
+            "history": self.history,
         }
+        self.wait(2)

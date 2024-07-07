@@ -1,6 +1,14 @@
 from typing import Iterable, cast
 
-from manim import DOWN, LEFT, SMALL_BUFF, Mobject, SurroundingRectangle, VGroup
+from manim import (
+    DOWN,
+    LEFT,
+    SMALL_BUFF,
+    Mobject,
+    SurroundingRectangle,
+    VGroup,
+    VMobject,
+)
 
 from manim_renderer import style
 from manim_renderer.entity import ProxyEntity, VisualElement
@@ -13,7 +21,7 @@ class BoxedHistoryEvents(HistoryEvents):
     def render(
         events: Iterable[schema.HistoryEvent],
         requested_updates: Iterable[schema.UpdateInfo],
-    ) -> Mobject:
+    ) -> VMobject:
         eventsm = HistoryEvents.render(events)
         if requested_updates:
             eventsm = VGroup(

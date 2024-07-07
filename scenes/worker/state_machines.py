@@ -12,6 +12,7 @@ from scenes.worker.utils import ContainerRectangle, labeled_rectangle
 from schema import schema
 
 if TYPE_CHECKING:
+    from scenes.worker import input
     from scenes.worker.scheduler import Scheduler
 
 MACHINE_RADIUS = 0.3
@@ -98,7 +99,10 @@ class WorkflowStateMachines(esv.Entity):
     )
     state_machines: dict[HistoryEventId, StateMachine] = field(default_factory=dict)
 
-    def handle_history_event(self, event: HistoryEvent):
+    def handle(self, event: "input.Event") -> None:
+        self.handle_history_event(event.history_event)
+
+    def handle_history_event(self, event: HistoryEvent) -> None:
         # TODO: self.is_replaying
 
         if event.event_type == HistoryEventType.WF_STARTED:
