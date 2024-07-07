@@ -119,17 +119,17 @@ class WorkflowStateMachines(esv.Entity):
                 event,
                 machine,
             )
-            explanation = esv.explanation.Explanation(
-                name="",
-                target=machine,
-                latex=r"""
+            self.animations.append(
+                lambda: esv.explanation.Explanation(
+                    name="",
+                    target=machine,
+                    latex=r"""
                 WORKFLOW\_TASK\_SCHEDULED is the first event in a sequence of
                 workflow task events. When the state machines encounter this
                 event, they create a new instance of WorkflowTaskStateMachine. 
                 """,
+                ).animate()
             )
-            for anim in explanation.animate():
-                self.scene.play(anim)
 
         elif event.event_type == HistoryEventType.WFT_STARTED:
             # Look up WorkflowTaskStateMachine instance and handle the event.

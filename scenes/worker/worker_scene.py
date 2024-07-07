@@ -18,17 +18,6 @@ class WorkerScene(esv.Scene):
     def events(self) -> Iterable[input.Event]:
         return (input.Event(e) for e in input.history_events)
 
-    def handle(self, event: input.Event):
-        # Mutate model state
-        for entity in self.entities.values():
-            entity.handle(event)
-
-        # Render model updates to screen
-        for entity in self.entities.values():
-            entity.render_to_screen()
-
-        self.wait(2)
-
     def init(self) -> None:
         assert isinstance(self.camera, Camera)
         self.camera.background_color = style.COLOR_SCENE_BACKGROUND
@@ -65,9 +54,9 @@ class WorkerScene(esv.Scene):
         self.history = history = History(name="History", events=input.history_events)
         self.add(history.mobj)
         self.entities: dict[str, esv.Entity] = {
+            "history": self.history,
             "coroutines": self.coroutines,
             "scheduler": self.scheduler,
             "state_machines": self.state_machines,
-            "history": self.history,
         }
         self.wait(2)
