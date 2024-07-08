@@ -2,10 +2,9 @@ from collections import deque
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Iterator, Optional
 
-import esv
-import esv.explanation
 from manim import Mobject, VGroup
 
+import esv
 from scenes.worker.constants import CONTAINER_HEIGHT, CONTAINER_WIDTH
 from scenes.worker.history import HistoryEvent, HistoryEventId, HistoryEventType
 from scenes.worker.utils import ContainerRectangle, labeled_rectangle
@@ -120,20 +119,17 @@ class WorkflowStateMachines(esv.Entity):
         elif event.event_type == HistoryEventType.WFT_SCHEDULED:
             # Non-stateful event
             # Create an instance of WorkflowTaskStateMachine.
-            machine = WorkflowTaskStateMachine(self, next(self.user_workflow_code))
-            self.add_machine(
+            machine = self.add_machine(
                 event,
-                machine,
+                WorkflowTaskStateMachine(self, next(self.user_workflow_code)),
             )
-            self.animations.append(
-                lambda: esv.explanation.Explanation(
-                    target=machine,
-                    latex=r"""
+            self.explain(
+                r"""
                 WORKFLOW\_TASK\_SCHEDULED is the first event in a sequence of
                 workflow task events. When the state machines encounter this
                 event, they create a new instance of WorkflowTaskStateMachine. 
                 """,
-                ).animate()
+                target=machine,
             )
 
         elif event.event_type == HistoryEventType.WFT_STARTED:
@@ -142,6 +138,17 @@ class WorkflowStateMachines(esv.Entity):
             # WFT_STARTED event in history (i.e. no WFT_COMPLETED for it yet).
             machine = self.state_machines[event.initiating_event_id]
             machine.handle_history_event(event)
+            self.explain(
+                r"""
+                WORKFLOW\_TASK\_STARTED is handled by the instance of
+                WorkflowTaskStateMachine that was created previously. It runs
+                all coroutines until blocked. This is the first time we're
+                executing user code, so you'll see the main workflow coroutine
+                come into existence, along with a child coroutine that it
+                creates.
+                """,
+                target=machine,
+            )
 
         elif event.event_type == HistoryEventType.WFT_COMPLETED:
             # Look up WorkflowTaskStateMachine instance and handle the event.
@@ -158,8 +165,13 @@ class WorkflowStateMachines(esv.Entity):
             # later transitioning to complete, will complete the promise.
 
             # TODO: should be created by command and set promise-completing callback
-            self.add_machine(
+            machine = self.add_machine(
                 event, TimerStateMachine("TimerStateMachine", workflow_machines=self)
+            )
+            self.explain(
+                r"""We're seeing TIMER\_STARTED because in a previous workflow task, some user code
+            made a call to `sleep(duration)`.""",
+                target=machine,
             )
 
         elif event.event_type == HistoryEventType.TIMER_FIRED:
@@ -210,8 +222,14 @@ class WorkflowStateMachines(esv.Entity):
             assert command.machine
             command.machine.handle_history_event(event)
 
-    def add_machine(self, initiating_event: HistoryEvent, machine: StateMachine):
+    def add_machine(
+        self, initiating_event: HistoryEvent, machine: StateMachine
+    ) -> StateMachine:
         self.state_machines[initiating_event.id] = machine
+        # TODO: Are we going to "mark" or "register" self.state_machines as the
+        # "official" children?
+        self.add_child(machine)
+        return machine
 
     def render(self) -> Mobject:
         container = ContainerRectangle(width=CONTAINER_WIDTH, height=CONTAINER_HEIGHT)
