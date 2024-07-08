@@ -22,8 +22,10 @@ MACHINE_RADIUS = 0.3
 class StateMachine(esv.Entity):
     workflow_machines: "WorkflowStateMachines"
 
-    def handle(self, event: "input.Event") -> None:
-        self.handle_history_event(event.history_event)
+    def handle(self, event: "input.Event") -> bool:
+        # WorkflowStateMachines dispatch history events to state machines; they
+        # do not handle raw events as they are passed down the tree.
+        return False
 
     def render(self) -> Mobject:
         label = self.__class__.__name__.replace("StateMachine", "\nStateMachine")
@@ -102,8 +104,9 @@ class WorkflowStateMachines(esv.Entity):
     )
     state_machines: dict[HistoryEventId, StateMachine] = field(default_factory=dict)
 
-    def handle(self, event: "input.Event") -> None:
+    def handle(self, event: "input.Event") -> bool:
         self.handle_history_event(event.history_event)
+        return True
 
     def handle_history_event(self, event: HistoryEvent) -> None:
         # TODO: self.is_replaying

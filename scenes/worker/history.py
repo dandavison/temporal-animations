@@ -32,9 +32,10 @@ class History(esv.Entity):
         self.applied_events = deque([])
         super().__post_init__()
 
-    def handle(self, event: "input.Event"):
+    def handle(self, event: "input.Event") -> bool:
         event.history_event.seen_by_worker = True
         self.applied_events.append(event.history_event)
+        return True
 
     def render(self) -> VMobject:
         return VDict(

@@ -18,8 +18,8 @@ from schema import schema
 class Scheduler(esv.Entity):
     coroutines: Coroutines
 
-    def handle(self, event: esv.Event):
-        pass
+    def handle(self, event: esv.Event) -> bool:
+        return True
 
     def run_all_coroutines_until_blocked(
         self,

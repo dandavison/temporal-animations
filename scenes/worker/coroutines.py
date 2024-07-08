@@ -13,8 +13,8 @@ BUF = 0.1
 
 @dataclass
 class Coroutine(esv.Entity):
-    def handle(self, event: esv.Event):
-        pass
+    def handle(self, event: esv.Event) -> bool:
+        return False
 
     def render(self):
         return labeled_rectangle(
@@ -26,8 +26,8 @@ class Coroutine(esv.Entity):
 class Coroutines(esv.Entity):
     coroutines: dict[str, Coroutine] = field(default_factory=dict)
 
-    def handle(self, event: esv.Event):
-        pass
+    def handle(self, event: esv.Event) -> bool:
+        return False
 
     def add_coroutine(self, id: str):
         assert id not in self.coroutines
