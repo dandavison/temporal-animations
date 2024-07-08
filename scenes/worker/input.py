@@ -12,6 +12,9 @@ from scenes.worker.state_machines import Command
 class Event(esv.Event):
     history_event: HistoryEvent
 
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__} {self.history_event}"
+
 
 make_history_event = partial(
     HistoryEvent, seen_by_worker=False, data={}, time=0, _type=""

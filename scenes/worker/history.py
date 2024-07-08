@@ -22,6 +22,9 @@ HistoryEventType = schema.HistoryEventType
 class HistoryEvent(schema.HistoryEvent):
     initiating_event_id: HistoryEventId = -1
 
+    def __str__(self) -> str:
+        return self.event_type.name
+
 
 @dataclass
 class History(esv.Entity):
