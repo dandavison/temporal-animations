@@ -124,7 +124,7 @@ manim = "^0.18.1"
 
 [package.source]
 type = "directory"
-url = "../../esv"
+url = "esv"
 
 [[package]]
 name = "glcontext"
@@ -980,4 +980,4 @@ watchmedo = ["PyYAML (>=3.10)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10,<3.13"
-content-hash = "d5ff1053c65f4f37dbe9091052ddb39c02a2a1e7f888fb260973a860a6fbb65b"
+content-hash = "de85422c68124f41bbba50056f359168f994d7e15a1b0955e0dac05dcb42adb7"
