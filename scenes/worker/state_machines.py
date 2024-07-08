@@ -127,7 +127,6 @@ class WorkflowStateMachines(esv.Entity):
             )
             self.animations.append(
                 lambda: esv.explanation.Explanation(
-                    name="",
                     target=machine,
                     latex=r"""
                 WORKFLOW\_TASK\_SCHEDULED is the first event in a sequence of
