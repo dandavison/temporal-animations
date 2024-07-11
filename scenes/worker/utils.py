@@ -32,4 +32,4 @@ def labeled_rectangle(label: str, **kwargs) -> Mobject:
 
 
 def label_text(text: str, **kwargs) -> Text:
-    return Text(text, font_size=16, **kwargs)
+    return Text(text, font_size=16, font=style.FONT_MONOSPACE, **kwargs)

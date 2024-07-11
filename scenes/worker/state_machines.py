@@ -28,7 +28,7 @@ class StateMachine(esv.Entity):
 
     def render(self) -> Mobject:
         label = self.__class__.__name__.replace("StateMachine", "\nStateMachine")
-        return labeled_rectangle(label, font="Monaco")
+        return labeled_rectangle(label)
 
     def handle_history_event(self, event: HistoryEvent): ...
 
