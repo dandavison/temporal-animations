@@ -1,9 +1,9 @@
 from itertools import chain
 from typing import Iterable
 
-import esv
 from manim import LEFT, Camera, Create, VGroup, VMobject
 
+import esv
 from manim_renderer import style
 from scenes.worker import input
 from scenes.worker.constants import CONTAINER_HEIGHT, CONTAINER_WIDTH
@@ -16,7 +16,8 @@ from scenes.worker.utils import label_text
 
 class WorkerScene(esv.Scene):
     def events(self) -> Iterable[input.Event]:
-        return (input.Event(e) for e in input.history_events)
+        while self.history.unapplied_events:
+            yield input.Event(self.history.unapplied_events.popleft())
 
     def init(self) -> None:
         assert isinstance(self.camera, Camera)
